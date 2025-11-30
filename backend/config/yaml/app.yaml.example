@@ -1,0 +1,18 @@
+app:
+  name: dsi-technical-test
+  port: 8083
+
+db:
+  dialect: mysql
+  host: host.docker.internal
+  port: 3307
+  db_name: dsi_technical # database name
+  username: root # database user
+  password: eucRvgVdaJMfY4G9R5KPwZ3V5g6pm8DP # database password
+
+jwt:
+  key: uwoww_sangad
+  expired_minute: 30
+
+logger:
+  enable: false
