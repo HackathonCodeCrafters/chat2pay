@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  backend:
+    build:
+      context: ../
+      dockerfile: ./deployment/Dockerfile
+    working_dir: /go/src/chat2pay
+    container_name: chat2pay-be
+    hostname: backend-chat2pay
+    networks:
+      - code-network
+    volumes:
+      - ../config/yaml:/go/src/chat2pay/config/yaml
+    ports:
+      - 9005:9005
+
+  mysql:
+    image: mysql/mysql-server:8.0
+    restart: always
+    container_name: chat2pay-mysql
+    hostname: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=eucRvgVdaJMfY4G9R5KPwZ3V5g6pm8DP
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - ../config/mysql:/var/lib/mysql
+    ports:
+      - 3307:3306
+    networks:
+      - code-network
+
+volumes:
+  mysql:
+    driver: local
+
+networks:
+  code-network:
+    driver: bridge
