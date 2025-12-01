@@ -7,7 +7,7 @@ services:
       dockerfile: ./deployment/Dockerfile
     working_dir: /go/src/chat2pay
     container_name: chat2pay-be
-    hostname: backend
+    hostname: backend-chat2pay
     networks:
       - code-network
     volumes:
