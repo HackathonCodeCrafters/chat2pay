@@ -3,21 +3,21 @@ package bootstrap
 import (
 	"chat2pay/config/yaml"
 	"fmt"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 // simple db connection
 func DatabaseConnection(config *yaml.Config) (*gorm.DB, error) {
-	// refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
-	dsn := fmt.Sprintf(`%s:%s@tcp(%v:%v)/%v?charset=utf8mb4&parseTime=True&loc=Local`,
+	// refer https://gorm.io/docs/connecting_to_the_database.html#PostgreSQL for details
+	dsn := fmt.Sprintf(`host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=Asia/Jakarta`,
+		config.DB.Host,
 		config.DB.Username,
 		config.DB.Password,
-		config.DB.Host,
-		config.DB.Port,
 		config.DB.DbName,
+		config.DB.Port,
 	)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		return nil, err
