@@ -1,14 +1,24 @@
 package routes
 
 import (
-	"chat2pay/config/yaml"
 	"chat2pay/internal/api/handlers"
-	"chat2pay/internal/middlewares/jwt"
-	"chat2pay/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
 
-func AuthRouter(app fiber.Router, cfg *yaml.Config, authMiddleware jwt.AuthMiddleware, service service.AuthService) {
-	app.Post("/login", handlers.Login(cfg, service))
-	app.Get("/profile", authMiddleware.ValidateToken(), handlers.GetProfile(cfg, service))
+func AuthRouter(
+	router fiber.Router,
+	merchantAuthHandler *handlers.MerchantAuthHandler,
+	customerAuthHandler *handlers.CustomerAuthHandler,
+) {
+	auth := router.Group("/auth")
+
+	// Merchant auth
+	merchant := auth.Group("/merchant")
+	merchant.Post("/register", merchantAuthHandler.Register)
+	merchant.Post("/login", merchantAuthHandler.Login)
+
+	// Customer auth
+	customer := auth.Group("/customer")
+	customer.Post("/register", customerAuthHandler.Register)
+	customer.Post("/login", customerAuthHandler.Login)
 }

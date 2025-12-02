@@ -1,143 +1,448 @@
-Simple REST API JWT Auth
-============================
+# Chat2Pay Backend API
 
-This app is very straight forward, build with golang and use  [Fiber](https://gofiber.io/) as the framework
+## 🚀 Features
 
-Make sure you have mysql for running this app
+### ✅ Authentication & Authorization
+- **JWT-based Authentication** with 24-hour token expiry
+- **Role-based Access Control (RBAC)**:
+  - **Merchant**: Manage products, orders, view customers
+  - **Customer**: Create orders, view own orders
+- **Secure Password** with bcrypt hashing
+- **Dual Registration System**:
+  - Merchant Registration → Creates Merchant + MerchantUser (owner)
+  - Customer Registration → Creates Customer account
 
-### Prerequisite :
+## 📋 Prerequisites
 
-- Docker
-- OS Linux Docker Image,
-- Golang version 1.19 or latest
+- Docker & Docker Compose
+- Golang 1.19 or latest
+- PostgreSQL 17
 
-# Install
-#### MySQL Query
+## 🛠️ Installation
 
+### 1. Clone Repository
+```bash
+git clone <repository-url>
+cd backend-chat2pay
+```
 
-Since im not providing endpoint for register you'll need to insert the user 
-in your local mysql, simply run this command
+### 2. Configuration
+Edit `config/yaml/app.yaml`:
+```yaml
+app:
+  name: chat2pay
+  port: 9005
 
-    INSERT INTO dsi_technical.users (id, created_at, updated_at, deleted_at, email, full_name, age, mobile_number, password) VALUES('bf506362-4e81-43d0-8238-d377bc8dab80', now(), now(), NULL, 'iniemail@gmail.com', 'ini full name', 99, '081234567890', '$2a$10$wZIYJUPjmOYvI8aTie7Qd.Sw11X169/0yo0k17NnCIrEXFgDl38Pi');
+db:
+  dialect: postgres
+  host: localhost  # or host.docker.internal for Docker
+  port: 5432
+  db_name: chat2pay
+  username: postgres
+  password: your_password
 
-we'll use this account for login
+jwt:
+  key: your_secret_key_here
+  expired_minute: 1440  # 24 hours
 
-    {
-        email : "iniemail@gmail.com"
-        password: "inipassword"
-    }
+logger:
+  enable: true
+```
 
-## Install localy
-    go mod tidy
+### 3. Run with Docker Compose
+```bash
+docker-compose up -d
+```
 
-#### Config
+This will start:
+- PostgreSQL database on port 5432
+- Backend API on port 9005
 
-    Make sure to change `app.yaml` variable value with your local db
+### 4. Run Locally (without Docker)
+```bash
+# Install dependencies
+go mod tidy
 
-#### Run the app
+# Run migrations (will auto-run on startup)
+# Migrations are in folder: migrations/001_create_merchants_table.sql
 
-    go run main.go
+# Run application
+go run main.go
+```
 
-#### Run the tests
+Application will run at: `http://localhost:9005`
 
-    cd internal/service
-    go test -verbose --cover
+## 📚 API Documentation
 
-## Build with docker
+See complete documentation at: **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)**
 
-_**note:**_ The docker-compose file contain mysql
+### Quick Start - Complete API Examples
 
-    docker-compose -f deployment/docker-compose.yaml up -d
+#### 1. Authentication
 
-make sure to double check `app.yaml` file with the db
+**Register Merchant:**
+```bash
+curl -X POST http://localhost:9005/api/auth/merchant/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "merchant_name": "Toko Elektronik ABC",
+    "legal_name": "PT ABC Elektronik",
+    "email": "owner@abc.com",
+    "phone": "081234567890",
+    "name": "John Doe",
+    "password": "password123"
+  }'
+```
 
+**Register Customer:**
+```bash
+curl -X POST http://localhost:9005/api/auth/customer/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "phone": "081234567890",
+    "password": "password123"
+  }'
+```
 
-# REST API
+**Merchant Login:**
+```bash
+curl -X POST http://localhost:9005/api/auth/merchant/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "owner@abc.com",
+    "password": "password123"
+  }'
+# Response will contain access_token - save it!
+```
 
-There are 2 endpoint in this app
+**Customer Login:**
+```bash
+curl -X POST http://localhost:9005/api/auth/customer/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "jane@example.com",
+    "password": "password123"
+  }'
+```
 
-## Get Profile
+#### 2. Merchant Management
 
-### Request
+**Get All Merchants (Public):**
+```bash
+curl -X GET http://localhost:9005/api/merchants
+```
 
-you need to generate the bearer token from endpoint **`Login`**
+**Get Merchant by ID (Public):**
+```bash
+curl -X GET http://localhost:9005/api/merchants/1
+```
 
-`GET /api/profile`
+**Create Merchant (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X POST http://localhost:9005/api/merchants \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "name": "Toko Baru",
+    "legal_name": "PT Toko Baru",
+    "email": "baru@example.com",
+    "phone": "082345678901"
+  }'
+```
 
-    curl -i -H 'Accept: application/json' -H 'Authorization: Bearer {{Token}}'  http://localhost:{{port}}/api/profile
+**Update Merchant (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X PUT http://localhost:9005/api/merchants/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "name": "Toko Updated",
+    "legal_name": "PT Updated",
+    "email": "owner@abc.com",
+    "phone": "081999999999"
+  }'
+```
 
-### Response
+**Delete Merchant (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X DELETE http://localhost:9005/api/merchants/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-    HTTP/1.1 200 OK
-    Content-Length: 179
-    Content-Type: application/json
-    Date: Sun, 05 Nov 2023 14:36:07 GMT
+#### 3. Product Management
 
-    {"data":{"id":"d13a939c-7518-431c-bb04-98701a3ab750","fullname":"ini fullname","email":"iniemail@gmail.com","age":99,"mobile_number":"081234567890"},"error":null,"status":true}%
+**Get All Products (Public):**
+```bash
+curl -X GET "http://localhost:9005/api/products?page=1&limit=10"
+```
 
-## Login
+**Get Product by ID (Public):**
+```bash
+curl -X GET http://localhost:9005/api/products/1
+```
 
-### Request
+**Create Product (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X POST http://localhost:9005/api/products \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "merchant_id": 1,
+    "name": "Laptop ASUS ROG",
+    "description": "Gaming laptop with RTX 4070",
+    "sku": "LAPTOP-001",
+    "price": 25000000,
+    "stock": 10
+  }'
+```
 
-`POST /api/login`
+**Update Product (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X PUT http://localhost:9005/api/products/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "merchant_id": 1,
+    "name": "Laptop ASUS ROG Updated",
+    "description": "Gaming laptop with RTX 4080",
+    "sku": "LAPTOP-001",
+    "price": 30000000,
+    "stock": 15
+  }'
+```
 
-    curl -i -H 'Accept: application/json' -d 'email=iniemail@gmail.com&password=inipassword' http://localhost:{{port}}/api/login
+**Delete Product (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X DELETE http://localhost:9005/api/products/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-### Response
+#### 4. Customer Management
 
-    HTTP/1.1 200 OK
-    Content-Length: 328
-    Content-Type: application/json
-    Date: Sun, 05 Nov 2023 14:33:07 GMT
+**Get All Customers (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X GET "http://localhost:9005/api/customers?page=1&limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-    {"data":{"id":"d13a939c-7518-431c-bb04-98701a3ab750","email":"iniemail@gmail.com","access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQxM2E5MzljLTc1MTgtNDMxYy1iYjA0LTk4NzAxYTNhYjc1MCIsImVtYWlsIjoiYXNlbG9sZUBnbWFpbC5jb20iLCJleHAiOjE2OTkxOTY1ODd9.0oGK-JueSveRYdr9iUz4jVxGL3ctS05k3q9cI7FT0-U"},"error":null,"status":true}%
+**Get Customer by ID (Authenticated):**
+```bash
+TOKEN="your_access_token"
+curl -X GET http://localhost:9005/api/customers/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-Folder Structure
-============================
+**Update Customer (Authenticated):**
+```bash
+TOKEN="your_customer_access_token"
+curl -X PUT http://localhost:9005/api/customers/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "name": "Jane Updated",
+    "email": "jane.updated@example.com",
+    "phone": "082999999999"
+  }'
+```
 
-### Top-level directory layout
+**Delete Customer (Authenticated):**
+```bash
+TOKEN="your_customer_access_token"
+curl -X DELETE http://localhost:9005/api/customers/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-    .
-    ├── bootstrap                 # Connector with other depedency for example mysql, redis, kafka etc
-    ├── config                    # Configuration folder that used by apps (.env like)
-    ├── deployment                # Dockerfile and docker-compose.yaml
-    ├── internal                  # Main directory for rest api
-    ├── migrations                # Migrations for database
-    ├── go.mod                  
-    ├── main.go
-    └── README.md
+#### 5. Order Management
 
-### Internal folder
+**Create Order (Authenticated):**
+```bash
+TOKEN="your_customer_access_token"
+curl -X POST http://localhost:9005/api/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "customer_id": 1,
+    "merchant_id": 1,
+    "items": [
+      {
+        "product_id": 1,
+        "quantity": 2,
+        "price": 25000000
+      }
+    ],
+    "shipping_cost": 50000,
+    "discount": 100000
+  }'
+```
 
-The actual source files of this project are stored inside the
-`internal` directory. this contains `api`,`entities`,`helper`, `middleware`, `repository`, `service` and `pkg`
+**Get All Orders (Authenticated):**
+```bash
+TOKEN="your_access_token"
+curl -X GET "http://localhost:9005/api/orders?page=1&limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-    .
-    ├── internal
-    │   ├── api                 # Contains all api this
-    │   │   ├── dto             # Used for processing the struct before send it as response
-    │   │   ├── handlers        # Files that handling the requests and the response of endpoint
-    │   │   ├── presenter       # Struct that used as response of endpoint
-    │   │   ├── request_model   # Struct for request parameter/body
-    │   │   └── router.go       # Routes of all endpoints
-    │   ├── const               # Constant variable list
-    │   ├── entities            # Struct of data that represent from database
-    │   ├── middlewares         # List of middlewares runs before handler
-    │   ├── pkg                 # List of package we can use  
-    │   ├── repositories        # Database interactor
-    │   └── service             # Business Logic of the endpoints
-    └── ...
+**Get Order by ID (Authenticated):**
+```bash
+TOKEN="your_access_token"
+curl -X GET http://localhost:9005/api/orders/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-# Database Schema
+**Update Order Status (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X PATCH http://localhost:9005/api/orders/1/status \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "status": "paid"
+  }'
+# Status options: pending, paid, shipped, completed, cancelled
+```
 
-| Column name   | Data Type    | Not Null | Key |
-|---------------|--------------|----------|-----|
-| id            | Varchar(35)  | ✅        | PK  |
-| email         | Varchar(255) | ✅        |     |
-| full_name     | Varchar(255) | ✅        |     |
-| password      | Varchar(255) | ✅        |     |
-| age           | Int(2)       | ✅        |     |
-| mobile_number | Varchar(13)  | ✅        |     |
-| created_at    | Timestamp    | ✅        |     |
-| updated_at    | Timestamp    | ✅        |     |
-| deleted_at    | Timestamp    |          |     |
+**Delete Order (Merchant Only):**
+```bash
+TOKEN="your_merchant_access_token"
+curl -X DELETE http://localhost:9005/api/orders/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### 6. Helper Script - Get Token
+
+Save this as `get_token.sh`:
+```bash
+#!/bin/bash
+
+# Get Merchant Token
+get_merchant_token() {
+  curl -s -X POST http://localhost:9005/api/auth/merchant/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"owner@abc.com","password":"password123"}' \
+    | grep -o '"access_token":"[^"]*' | cut -d'"' -f4
+}
+
+# Get Customer Token
+get_customer_token() {
+  curl -s -X POST http://localhost:9005/api/auth/customer/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"jane@example.com","password":"password123"}' \
+    | grep -o '"access_token":"[^"]*' | cut -d'"' -f4
+}
+
+# Usage:
+# TOKEN=$(get_merchant_token)
+# echo $TOKEN
+```
+
+## 🔒 Authorization Rules
+
+### Public Endpoints (No Auth)
+- `GET /api/merchants` - List merchants
+- `GET /api/merchants/:id` - Get merchant detail
+- `GET /api/products` - List products
+- `GET /api/products/:id` - Get product detail
+
+### Merchant Only
+- Create/Update/Delete: Merchants, Products
+- View all customers
+- Update order status, Delete orders
+
+### Authenticated (Merchant or Customer)
+- Create orders
+- View own orders
+- Update own profile
+
+## 🧪 Testing
+
+```bash
+# Run tests
+cd internal/service
+go test -v --cover
+
+# Run specific test
+go test -v -run TestServiceName
+```
+
+## 📁 Project Structure
+
+```
+.
+├── bootstrap/              # Database connection & dependencies
+├── config/                 # Configuration files (app.yaml)
+│   └── yaml/
+├── internal/               # Main application code
+│   ├── api/
+│   │   ├── dto/           # Data Transfer Objects (request/response)
+│   │   ├── handlers/      # HTTP request handlers
+│   │   ├── presenter/     # Response formatters
+│   │   ├── routes/        # Route definitions
+│   │   └── router.go      # Main router setup
+│   ├── consts/            # Constants
+│   ├── entities/          # Database models (GORM)
+│   ├── middlewares/       # JWT auth & other middlewares
+│   │   └── jwt/
+│   ├── pkg/               # Shared packages (logger, etc)
+│   ├── repositories/      # Database operations (Repository pattern)
+│   └── service/           # Business logic (Service layer)
+├── migrations/            # Database migrations (SQL)
+├── Dockerfile
+├── docker-compose.yaml
+├── go.mod
+├── main.go
+├── README.md
+└── API_DOCUMENTATION.md
+```
+
+## 🐛 Troubleshooting
+
+### Database Connection Error
+```bash
+# Check if PostgreSQL is running
+docker ps
+
+# Check connection
+psql -h localhost -U postgres -d chat2pay
+
+# Reset database
+docker-compose down -v
+docker-compose up -d
+```
+
+### JWT Token Invalid
+- Check `config/yaml/app.yaml` - jwt.key must be the same
+- Token expires in 24 hours, re-login if expired
+
+### Migration Not Running
+- Migrations auto-run on startup
+- Check `migrations/` folder for SQL files
+- Make sure database connection success in logs
+
+## 📝 Environment Variables
+
+Application uses `config/yaml/app.yaml` for configuration.
+
+For production, use environment variables:
+```bash
+export DB_HOST=your_db_host
+export DB_PORT=5432
+export DB_NAME=chat2pay
+export DB_USER=postgres
+export DB_PASSWORD=your_password
+export JWT_SECRET=your_secret_key
+export APP_PORT=9005
+```
+
+## 📄 License
+
+This project is licensed under the MIT License.
+

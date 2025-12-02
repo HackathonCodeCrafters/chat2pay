@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# chat2pay frontend
 
-## Getting Started
+Next.js app dengan infrastruktur integrasi API bawaan.
 
-First, run the development server:
+## Environment
+
+Salin `.env.example` lalu isi nilai yang sesuai.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Key | Deskripsi |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | Base URL API (contoh `https://api.example.com`). Dipakai di server dan client. |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Menjalankan
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Buka http://localhost:3000
 
-To learn more about Next.js, take a look at the following resources:
+## Cara pakai API client
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+API helper tersedia di `lib/api`:
+- `apiClient` (default): memakai `NEXT_PUBLIC_API_BASE_URL`.
+- `endpoints`: registry path API.
+- `ApiError`: class error dengan status/payload.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### GET example
 
-## Deploy on Vercel
+```ts
+import { apiClient, endpoints } from "@/lib/api";
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+type Payment = { id: string; amount: number; status: string };
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+export async function listPayments() {
+  const { data } = await apiClient.get<Payment[]>(
+    endpoints.payments.root(),
+    { query: { page: 1, per_page: 10 } }
+  );
+
+  return data;
+}
+```
+
+### POST example
+
+```ts
+import { apiClient, endpoints } from "@/lib/api";
+
+type Payment = { id: string; amount: number; status: string };
+
+export async function createPayment(payload: {
+  amount: number;
+  currency: string;
+}) {
+  const { data } = await apiClient.post<Payment>(
+    endpoints.payments.root(),
+    { json: payload }
+  );
+
+  return data;
+}
+```
+
+### Error handling singkat
+
+```ts
+import { ApiError } from "@/lib/api";
+
+try {
+  await listPayments();
+} catch (error) {
+  if (error instanceof ApiError) {
+    console.error("API failed", error.status, error.payload);
+  }
+}
+```
