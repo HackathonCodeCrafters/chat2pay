@@ -12,5 +12,5 @@ type MerchantUser struct {
 	Status       string    `gorm:"type:enum('active','inactive');not null;default:'active'" json:"status"`
 	CreatedAt    time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt    time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
-	Merchant     Merchant  `gorm:"foreignKey:MerchantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Merchant     *Merchant `gorm:"foreignKey:MerchantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
