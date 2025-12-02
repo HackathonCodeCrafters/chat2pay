@@ -15,7 +15,8 @@ type Product struct {
 	Status      string           `gorm:"type:enum('active','inactive','out_of_stock');not null;default:'active'" json:"status"`
 	CreatedAt   time.Time        `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt   time.Time        `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
-	Merchant    Merchant         `gorm:"foreignKey:MerchantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Merchant    *Merchant        `gorm:"foreignKey:MerchantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Outlet      *Outlet          `gorm:"foreignKey:OutletID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	Category    *ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Images      []ProductImage   `gorm:"foreignKey:ProductID"`
 }

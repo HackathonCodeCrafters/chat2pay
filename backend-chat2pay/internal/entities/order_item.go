@@ -11,6 +11,6 @@ type OrderItem struct {
 	Qty                 int       `gorm:"not null" json:"qty"`
 	TotalPrice          float64   `gorm:"type:decimal(15,2);not null" json:"total_price"`
 	CreatedAt           time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	Order               Order     `gorm:"foreignKey:OrderID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Product             Product   `gorm:"foreignKey:ProductID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Order               *Order    `gorm:"foreignKey:OrderID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Product             *Product  `gorm:"foreignKey:ProductID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 }
