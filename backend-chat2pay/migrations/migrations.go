@@ -23,5 +23,9 @@ var models = []interface{}{
 }
 
 func AutoMigration(db *gorm.DB) {
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(models...)
+	// Disabled AutoMigrate because we use SQL migrations (001_create_merchants_table.sql)
+	// AutoMigrate can cause issues with existing constraints and enums in PostgreSQL
+	// If you need to add new tables, update the SQL migration file instead
+
+	// db.AutoMigrate(models...)
 }
