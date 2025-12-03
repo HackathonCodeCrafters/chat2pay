@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  backend:
+    build:
+      context: .
+    working_dir: /go/src/chat2pay
+    container_name: chat2pay-be
+    hostname: backend-chat2pay
+    networks:
+      - laravel-network
+    volumes:
+      - ./config/yaml:/go/src/chat2pay/config/yaml
+    ports:
+      - 9005:9005
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  postgres:
+    container_name: postgres_svc
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    networks:
+      - laravel-network
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=BZHnDem5mcbtJkk9YbZee787SyAFGy7x
+    volumes:
+      - "./aio/postgres:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres:
+    driver: local
+
+networks:
+  laravel-network:
+    driver: bridge
