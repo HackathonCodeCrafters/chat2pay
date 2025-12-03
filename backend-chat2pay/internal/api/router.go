@@ -70,5 +70,23 @@ func NewRouter(cfg *yaml.Config) *fiber.App {
 	routes.CustomerRouter(api, customerHandler, authMdwr)
 	routes.OrderRouter(api, orderHandler, authMdwr)
 
+	//kolosalModel := kolosal.NewKolosalLLM(
+	//	cfg.Kolosal.URL,
+	//	cfg.Kolosal.APIKey,
+	//	cfg.Kolosal.ModelName,
+	//)
+	//
+	//response, err := kolosalModel.GenerateContent(context.Background(), []llms.MessageContent{
+	//	{
+	//		Role:  llms.ChatMessageTypeHuman,
+	//		Parts: []llms.ContentPart{llms.TextContent{Text: "Hello, who are you?"}},
+	//	},
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	//fmt.Println("model response --> ", &response.Choices[0])
+
 	return router
 }

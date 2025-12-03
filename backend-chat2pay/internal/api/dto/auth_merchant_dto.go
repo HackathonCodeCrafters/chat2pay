@@ -40,8 +40,8 @@ func ToMerchantAuthResponse(merchantUser *entities.MerchantUser, token string) M
 		MerchantID:  merchantUser.MerchantID,
 		Name:        merchantUser.Name,
 		Email:       merchantUser.Email,
-		Role:        merchantUser.Role,
-		Status:      merchantUser.Status,
+		Role:        string(merchantUser.Role),
+		Status:      string(merchantUser.Status),
 		AccessToken: token,
 	}
 

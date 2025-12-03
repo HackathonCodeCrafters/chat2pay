@@ -1,10 +1,9 @@
 package repositories
 
 import (
-	"chat2pay/internal/consts"
 	"chat2pay/internal/entities"
 	"context"
-	"gorm.io/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type ProductRepository interface {
@@ -19,109 +18,142 @@ type ProductRepository interface {
 }
 
 type productRepository struct {
-	db *gorm.DB
+	DB *sqlx.DB
 }
 
-func NewProductRepo(db *gorm.DB) ProductRepository {
+func NewProductRepo(db *sqlx.DB) ProductRepository {
 	return &productRepository{
-		db: db,
+		DB: db,
 	}
 }
 
 func (r *productRepository) Create(ctx context.Context, product *entities.Product) (*entities.Product, error) {
-	err := r.db.WithContext(ctx).Create(product).Error
-	if err != nil {
-		return nil, err
-	}
-	return product, nil
+	query := `
+		INSERT INTO products (
+			merchant_id, outlet_id, category_id, name, description, sku,
+			price, stock, status
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		RETURNING id, created_at, updated_at;
+	`
+
+	err := r.DB.QueryRowContext(ctx, query,
+		product.MerchantID,
+		product.OutletID,
+		product.CategoryID,
+		product.Name,
+		product.Description,
+		product.SKU,
+		product.Price,
+		product.Stock,
+		product.Status,
+	).Scan(&product.ID, &product.CreatedAt, &product.UpdatedAt)
+
+	return product, err
 }
 
 func (r *productRepository) FindAll(ctx context.Context, merchantId uint64, limit, offset int) ([]entities.Product, error) {
-	var products []entities.Product
-	query := r.db.WithContext(ctx).Preload("Category")
+	products := []entities.Product{}
 
-	if merchantId > 0 {
-		query = query.Where("merchant_id = ?", merchantId)
-	}
+	query := `
+		SELECT 
+			id, merchant_id, outlet_id, category_id, name, description, sku,
+			price, stock, status, created_at, updated_at
+		FROM products 
+		WHERE ($1 = 0 OR merchant_id = $1)
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3;
+	`
 
-	if limit > 0 {
-		query = query.Limit(limit).Offset(offset)
-	}
-
-	err := query.Order("created_at DESC").Find(&products).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return products, nil
+	err := r.DB.SelectContext(ctx, &products, query, merchantId, limit, offset)
+	return products, err
 }
 
 func (r *productRepository) FindOneById(ctx context.Context, id uint64) (*entities.Product, error) {
-	product := entities.Product{}
-	err := r.db.WithContext(ctx).
-		Preload("Category").
-		Preload("Images").
-		Where("id = ?", id).
-		First(&product).Error
+	var p entities.Product
+
+	query := `
+		SELECT 
+			id, merchant_id, outlet_id, category_id, name, description, sku,
+			price, stock, status, created_at, updated_at
+		FROM products WHERE id = $1 LIMIT 1;
+	`
+
+	err := r.DB.GetContext(ctx, &p, query, id)
 
 	if err != nil {
-		if err.Error() == consts.SqlNoRow {
+		if err.Error() == "sql: no rows in result set" {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	return &product, nil
+	return &p, nil
 }
 
 func (r *productRepository) FindByCategoryId(ctx context.Context, categoryId uint64, limit, offset int) ([]entities.Product, error) {
-	var products []entities.Product
-	query := r.db.WithContext(ctx).
-		Preload("Category").
-		Where("category_id = ?", categoryId)
+	products := []entities.Product{}
 
-	if limit > 0 {
-		query = query.Limit(limit).Offset(offset)
-	}
+	query := `
+		SELECT 
+			id, merchant_id, outlet_id, category_id, name, description, sku,
+			price, stock, status, created_at, updated_at
+		FROM products 
+		WHERE category_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3;
+	`
 
-	err := query.Order("created_at DESC").Find(&products).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return products, nil
+	err := r.DB.SelectContext(ctx, &products, query, categoryId, limit, offset)
+	return products, err
 }
 
 func (r *productRepository) Update(ctx context.Context, product *entities.Product) (*entities.Product, error) {
-	err := r.db.WithContext(ctx).Save(product).Error
-	if err != nil {
-		return nil, err
-	}
-	return product, nil
+	query := `
+		UPDATE products
+		SET merchant_id=$1, outlet_id=$2, category_id=$3, name=$4,
+			description=$5, sku=$6, price=$7, stock=$8, status=$9, 
+			updated_at = NOW()
+		WHERE id=$10
+		RETURNING updated_at;
+	`
+
+	err := r.DB.QueryRowContext(ctx, query,
+		product.MerchantID,
+		product.OutletID,
+		product.CategoryID,
+		product.Name,
+		product.Description,
+		product.SKU,
+		product.Price,
+		product.Stock,
+		product.Status,
+		product.ID,
+	).Scan(&product.UpdatedAt)
+
+	return product, err
 }
 
 func (r *productRepository) Delete(ctx context.Context, id uint64) error {
-	err := r.db.WithContext(ctx).Delete(&entities.Product{}, id).Error
+	_, err := r.DB.ExecContext(ctx, `DELETE FROM products WHERE id = $1`, id)
 	return err
 }
 
 func (r *productRepository) UpdateStock(ctx context.Context, id uint64, quantity int) error {
-	err := r.db.WithContext(ctx).
-		Model(&entities.Product{}).
-		Where("id = ?", id).
-		UpdateColumn("stock", gorm.Expr("stock + ?", quantity)).
-		Error
+	_, err := r.DB.ExecContext(ctx,
+		`UPDATE products SET stock = stock + $1 WHERE id = $2`,
+		quantity, id,
+	)
 	return err
 }
 
 func (r *productRepository) Count(ctx context.Context, merchantId uint64) (int64, error) {
 	var count int64
-	query := r.db.WithContext(ctx).Model(&entities.Product{})
 
-	if merchantId > 0 {
-		query = query.Where("merchant_id = ?", merchantId)
-	}
+	query := `
+		SELECT COUNT(*) FROM products
+		WHERE ($1 = 0 OR merchant_id = $1);
+	`
 
-	err := query.Count(&count).Error
+	err := r.DB.GetContext(ctx, &count, query, merchantId)
 	return count, err
 }

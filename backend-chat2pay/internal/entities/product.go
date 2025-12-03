@@ -12,7 +12,7 @@ type Product struct {
 	SKU         *string          `gorm:"type:varchar(100);uniqueIndex:uq_products_merchant_sku,priority:2" json:"sku,omitempty"`
 	Price       float64          `gorm:"type:decimal(15,2);not null" json:"price"`
 	Stock       int              `gorm:"not null;default:0" json:"stock"`
-	Status      string           `gorm:"type:enum('active','inactive','out_of_stock');not null;default:'active'" json:"status"`
+	Status      string           `gorm:"type:product_status_enum;not null;default:'active'" json:"status"`
 	CreatedAt   time.Time        `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt   time.Time        `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
 	Merchant    *Merchant        `gorm:"foreignKey:MerchantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

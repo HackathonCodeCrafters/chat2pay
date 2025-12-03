@@ -8,7 +8,7 @@ type Order struct {
 	CustomerID     uint64      `gorm:"not null;index:idx_orders_customer_id" json:"customer_id"`
 	MerchantID     uint64      `gorm:"not null;index:idx_orders_merchant_id" json:"merchant_id"`
 	OutletID       *uint64     `gorm:"index:idx_orders_outlet_id" json:"outlet_id,omitempty"`
-	Status         string      `gorm:"type:enum('pending','paid','shipped','completed','cancelled');not null;default:'pending';index:idx_orders_status" json:"status"`
+	Status         string      `gorm:"type:order_status;not null;default:'pending';index:idx_orders_status" json:"status"`
 	SubtotalAmount float64     `gorm:"type:decimal(15,2);not null;default:0" json:"subtotal_amount"`
 	ShippingAmount float64     `gorm:"type:decimal(15,2);not null;default:0" json:"shipping_amount"`
 	DiscountAmount float64     `gorm:"type:decimal(15,2);not null;default:0" json:"discount_amount"`

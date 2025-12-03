@@ -14,14 +14,18 @@ var models = []interface{}{
 	&entities.Customer{},
 	&entities.Product{},
 	&entities.ProductImage{},
-	&entities.Order{},
-	&entities.OrderItem{},
-	&entities.Payment{},
-	&entities.Shipment{},
-	&entities.Conversation{},
-	&entities.Message{},
+	//&entities.Order{},
+	//&entities.OrderItem{},
+	//&entities.Payment{},
+	//&entities.Shipment{},
+	//&entities.Conversation{},
+	//&entities.Message{},
 }
 
 func AutoMigration(db *gorm.DB) {
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(models...)
+	//db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(models...)
+	err := db.AutoMigrate(models...)
+	if err != nil {
+		panic(err)
+	}
 }

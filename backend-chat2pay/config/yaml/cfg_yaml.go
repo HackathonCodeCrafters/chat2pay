@@ -2,14 +2,15 @@ package yaml
 
 import (
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
+	"os"
 )
 
 type Config struct {
-	App    App    `yaml:"app,omitempty" json:"app"`
-	DB     DB     `yaml:"db" json:"db"`
-	JWT    JWT    `yaml:"jwt" json:"jwt"`
-	Logger Logger `yaml:"logger" json:"logger"`
+	App     App     `yaml:"app,omitempty" json:"app"`
+	DB      DB      `yaml:"db" json:"db"`
+	JWT     JWT     `yaml:"jwt" json:"jwt"`
+	Logger  Logger  `yaml:"logger" json:"logger"`
+	Kolosal Kolosal `yaml:"kolosal"json:"kolosal"`
 }
 
 type App struct {
@@ -33,6 +34,12 @@ type DB struct {
 	//Charset       string `yaml:"charset" json:"charset"`
 }
 
+type Kolosal struct {
+	URL       string `yaml:"url" json:"url"`
+	APIKey    string `yaml:"api_key" json:"api_key"`
+	ModelName string `yaml:"model_name" json:"model_name"`
+}
+
 type JWT struct {
 	Key           string `yaml:"key" json:"key"`
 	ExpiredMinute int    `yaml:"expired_minute" json:"expired_minute"`
@@ -45,7 +52,7 @@ type Logger struct {
 func NewConfig() (*Config, error) {
 	var config *Config
 
-	yfile, err := ioutil.ReadFile("./config/yaml/app.yaml")
+	yfile, err := os.ReadFile("./config/yaml/app.yaml")
 
 	if err != nil {
 		return nil, err
