@@ -31,8 +31,13 @@ func NewContainer() (di.Container, error) {
 		return di.Container{}, err
 	}
 
-	// Repository
+	// Service
 	if err := builder.Add(*LoadService()...); err != nil {
+		return di.Container{}, err
+	}
+
+	// Handler
+	if err := builder.Add(*LoadHandler()...); err != nil {
 		return di.Container{}, err
 	}
 

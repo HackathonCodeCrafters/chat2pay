@@ -14,5 +14,11 @@ func NewRepository() *[]di.Def {
 				return repositories.NewProductRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
 			},
 		},
+		{
+			Name: MerchantRepositoryName,
+			Build: func(ctn di.Container) (interface{}, error) {
+				return repositories.NewMerchantRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
+			},
+		},
 	}
 }

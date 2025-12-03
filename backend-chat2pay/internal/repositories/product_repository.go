@@ -29,7 +29,7 @@ func NewProductRepo(db *sqlx.DB) ProductRepository {
 
 func (r *productRepository) Create(ctx context.Context, product *entities.Product) (*entities.Product, error) {
 	query := `
-		INSERT INTO products (
+		INSERT INTO product (
 			merchant_id, outlet_id, category_id, name, description, sku,
 			price, stock, status
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -58,7 +58,7 @@ func (r *productRepository) FindAll(ctx context.Context, merchantId uint64, limi
 		SELECT 
 			id, merchant_id, outlet_id, category_id, name, description, sku,
 			price, stock, status, created_at, updated_at
-		FROM products 
+		FROM product 
 		WHERE ($1 = 0 OR merchant_id = $1)
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3;
@@ -75,7 +75,7 @@ func (r *productRepository) FindOneById(ctx context.Context, id uint64) (*entiti
 		SELECT 
 			id, merchant_id, outlet_id, category_id, name, description, sku,
 			price, stock, status, created_at, updated_at
-		FROM products WHERE id = $1 LIMIT 1;
+		FROM product WHERE id = $1 LIMIT 1;
 	`
 
 	err := r.DB.GetContext(ctx, &p, query, id)
@@ -97,7 +97,7 @@ func (r *productRepository) FindByCategoryId(ctx context.Context, categoryId uin
 		SELECT 
 			id, merchant_id, outlet_id, category_id, name, description, sku,
 			price, stock, status, created_at, updated_at
-		FROM products 
+		FROM product 
 		WHERE category_id = $1
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3;
@@ -109,7 +109,7 @@ func (r *productRepository) FindByCategoryId(ctx context.Context, categoryId uin
 
 func (r *productRepository) Update(ctx context.Context, product *entities.Product) (*entities.Product, error) {
 	query := `
-		UPDATE products
+		UPDATE product
 		SET merchant_id=$1, outlet_id=$2, category_id=$3, name=$4,
 			description=$5, sku=$6, price=$7, stock=$8, status=$9, 
 			updated_at = NOW()
@@ -140,7 +140,7 @@ func (r *productRepository) Delete(ctx context.Context, id uint64) error {
 
 func (r *productRepository) UpdateStock(ctx context.Context, id uint64, quantity int) error {
 	_, err := r.DB.ExecContext(ctx,
-		`UPDATE products SET stock = stock + $1 WHERE id = $2`,
+		`UPDATE product SET stock = stock + $1 WHERE id = $2`,
 		quantity, id,
 	)
 	return err
@@ -150,7 +150,7 @@ func (r *productRepository) Count(ctx context.Context, merchantId uint64) (int64
 	var count int64
 
 	query := `
-		SELECT COUNT(*) FROM products
+		SELECT COUNT(*) FROM product
 		WHERE ($1 = 0 OR merchant_id = $1);
 	`
 

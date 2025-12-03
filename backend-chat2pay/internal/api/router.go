@@ -1,11 +1,14 @@
 package api
 
 import (
+	"chat2pay/bootstrap"
+	"chat2pay/internal/api/handlers"
+	"chat2pay/internal/api/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sarulabs/di/v2"
 )
 
-func NewRouter(container di.Container) *fiber.App {
+func NewRouter(ctn di.Container) *fiber.App {
 	router := fiber.New()
 
 	// API Group
@@ -20,9 +23,9 @@ func NewRouter(container di.Container) *fiber.App {
 	})
 
 	// Routes
-	//routes.AuthRouter(api, merchantAuthHandler, customerAuthHandler)
+	//api.AuthRouter(api, merchantAuthHandler, customerAuthHandler)
 	//routes.MerchantRouter(api, merchantHandler, authMdwr)
-	//routes.ProductRouter(api, productHandler, authMdwr)
+	routes.ProductRouter(api, ctn.Get(bootstrap.ProductHandlerName).(*handlers.ProductHandler))
 	//routes.CustomerRouter(api, customerHandler, authMdwr)
 	//routes.OrderRouter(api, orderHandler, authMdwr)
 

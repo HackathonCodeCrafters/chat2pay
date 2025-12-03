@@ -11,6 +11,9 @@ const (
 	AuthCustomerService = "auth_customer.service"
 	AuthMerchantService = "auth_merchant.service"
 
+	ProductHandlerName  = "product.handler"
+	CustomerHandlerName = "customer.handler"
+
 	ProductRepositoryName  = "product.repository"
 	MerchantRepositoryName = "merchant.repository"
 )

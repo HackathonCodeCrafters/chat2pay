@@ -97,6 +97,7 @@ func (s *productService) GetAll(ctx context.Context, merchantId uint64, page, li
 	log.Info("fetching products")
 	products, err := s.productRepo.FindAll(ctx, merchantId, limit, offset)
 	if err != nil {
+		fmt.Println("err --> ", err)
 		log.Error(fmt.Sprintf("error fetching products: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to fetch products"))
 	}
