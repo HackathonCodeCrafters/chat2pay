@@ -11,5 +11,6 @@ const (
 	AuthCustomerService = "auth_customer.service"
 	AuthMerchantService = "auth_merchant.service"
 
-	ProductRepositoriesName = "product.repositories"
+	ProductRepositoryName  = "product.repository"
+	MerchantRepositoryName = "merchant.repository"
 )

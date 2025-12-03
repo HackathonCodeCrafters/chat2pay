@@ -23,7 +23,7 @@ func Migration(ctn *di.Container) []*cli.Command {
 						Dir: "./migration",
 					}
 
-					_, err := migrate.Exec(ctn.Get(bootstrap.DatabaseDefName).(*sqlx.DB).DB, "postgres", migrations, migrate.Up)
+					_, err := migrate.Exec(ctn.Get(bootstrap.DatabaseAdapter).(*sqlx.DB).DB, "postgres", migrations, migrate.Up)
 					if err != nil {
 						panic(err)
 					}
@@ -38,7 +38,7 @@ func Migration(ctn *di.Container) []*cli.Command {
 						Dir: "./migration",
 					}
 
-					_, err := migrate.Exec(ctn.Get(bootstrap.DatabaseDefName).(*sqlx.DB).DB, "postgres", migrations, migrate.Down)
+					_, err := migrate.Exec(ctn.Get(bootstrap.DatabaseAdapter).(*sqlx.DB).DB, "postgres", migrations, migrate.Down)
 					if err != nil {
 						panic(err)
 					}
@@ -57,7 +57,7 @@ func Migration(ctn *di.Container) []*cli.Command {
 								Dir: "./app/database/migration",
 							}
 
-							_, err := migrate.ExecMax(ctn.Get(bootstrap.DatabaseDefName).(*sqlx.DB).DB, "postgres", migrations, migrate.Down, 1)
+							_, err := migrate.ExecMax(ctn.Get(bootstrap.DatabaseAdapter).(*sqlx.DB).DB, "postgres", migrations, migrate.Down, 1)
 							if err != nil {
 								panic(err)
 							}

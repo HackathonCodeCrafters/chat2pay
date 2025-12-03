@@ -9,12 +9,13 @@ import (
 	"time"
 )
 
-func loadAdapter(builder *di.Builder, config *yaml.Config) {
-	builder.Add([]di.Def{
+func NewAdapter() *[]di.Def {
+	return &[]di.Def{
 		{
 			Name:  DatabaseAdapter,
 			Scope: di.App,
 			Build: func(ctn di.Container) (interface{}, error) {
+				config := ctn.Get(ConfigDefName).(*yaml.Config)
 				// Generate DSN string from config
 				var generateConnectionString = func() string {
 					return fmt.Sprintf(
@@ -43,5 +44,5 @@ func loadAdapter(builder *di.Builder, config *yaml.Config) {
 				return obj.(*sqlx.DB).Close()
 			},
 		},
-	}...)
+	}
 }

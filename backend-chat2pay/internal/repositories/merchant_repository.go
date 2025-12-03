@@ -1,10 +1,9 @@
 package repositories
 
 import (
-	"chat2pay/internal/consts"
 	"chat2pay/internal/entities"
 	"context"
-	"gorm.io/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type MerchantRepository interface {
@@ -18,45 +17,47 @@ type MerchantRepository interface {
 }
 
 type merchantRepository struct {
-	db *gorm.DB
+	DB *sqlx.DB
 }
 
-func NewMerchantRepo(db *gorm.DB) MerchantRepository {
+func NewMerchantRepo(db *sqlx.DB) MerchantRepository {
 	return &merchantRepository{
-		db: db,
+		DB: db,
 	}
 }
 
 func (r *merchantRepository) Create(ctx context.Context, merchant *entities.Merchant) (*entities.Merchant, error) {
-	err := r.db.WithContext(ctx).Create(merchant).Error
-	if err != nil {
-		return nil, err
-	}
-	return merchant, nil
-}
+	query := `
+		INSERT INTO merchants (name, legal_name, email, phone, status)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, updated_at;
+	`
 
-func (r *merchantRepository) FindAll(ctx context.Context, limit, offset int) ([]entities.Merchant, error) {
-	var merchants []entities.Merchant
-	query := r.db.WithContext(ctx)
+	err := r.DB.QueryRowContext(ctx, query,
+		merchant.Name,
+		merchant.LegalName,
+		merchant.Email,
+		merchant.Phone,
+		merchant.Status,
+	).Scan(&merchant.ID, &merchant.CreatedAt, &merchant.UpdatedAt)
 
-	if limit > 0 {
-		query = query.Limit(limit).Offset(offset)
-	}
-
-	err := query.Order("created_at DESC").Find(&merchants).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return merchants, nil
+	return merchant, err
 }
 
 func (r *merchantRepository) FindOneById(ctx context.Context, id uint64) (*entities.Merchant, error) {
-	merchant := entities.Merchant{}
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&merchant).Error
+	var merchant entities.Merchant
 
+	query := `
+		SELECT 
+			id, name, legal_name, email, phone, status, created_at, updated_at
+		FROM merchants
+		WHERE id = $1
+		LIMIT 1;
+	`
+
+	err := r.DB.GetContext(ctx, &merchant, query, id)
 	if err != nil {
-		if err.Error() == consts.SqlNoRow {
+		if err.Error() == "sql: no rows in result set" {
 			return nil, nil
 		}
 		return nil, err
@@ -65,12 +66,35 @@ func (r *merchantRepository) FindOneById(ctx context.Context, id uint64) (*entit
 	return &merchant, nil
 }
 
-func (r *merchantRepository) FindOneByEmail(ctx context.Context, email string) (*entities.Merchant, error) {
-	merchant := entities.Merchant{}
-	err := r.db.WithContext(ctx).Where("email = ?", email).First(&merchant).Error
+func (r *merchantRepository) FindAll(ctx context.Context, limit, offset int) ([]entities.Merchant, error) {
+	var merchants []entities.Merchant
 
+	query := `
+		SELECT 
+			id, name, legal_name, email, phone, status, created_at, updated_at
+		FROM merchants
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2;
+	`
+
+	err := r.DB.SelectContext(ctx, &merchants, query, limit, offset)
+	return merchants, err
+}
+
+func (r *merchantRepository) FindOneByEmail(ctx context.Context, email string) (*entities.Merchant, error) {
+	var merchant entities.Merchant
+
+	query := `
+		SELECT 
+			id, name, legal_name, email, phone, status, created_at, updated_at
+		FROM merchants
+		WHERE email = $1
+		LIMIT 1;
+	`
+
+	err := r.DB.GetContext(ctx, &merchant, query, email)
 	if err != nil {
-		if err.Error() == consts.SqlNoRow {
+		if err.Error() == "sql: no rows in result set" {
 			return nil, nil
 		}
 		return nil, err
@@ -80,20 +104,33 @@ func (r *merchantRepository) FindOneByEmail(ctx context.Context, email string) (
 }
 
 func (r *merchantRepository) Update(ctx context.Context, merchant *entities.Merchant) (*entities.Merchant, error) {
-	err := r.db.WithContext(ctx).Save(merchant).Error
-	if err != nil {
-		return nil, err
-	}
-	return merchant, nil
+	query := `
+		UPDATE merchants
+		SET name=$1, legal_name=$2, email=$3, phone=$4, status=$5, updated_at=NOW()
+		WHERE id = $6
+		RETURNING updated_at;
+	`
+
+	err := r.DB.QueryRowContext(ctx, query,
+		merchant.Name,
+		merchant.LegalName,
+		merchant.Email,
+		merchant.Phone,
+		merchant.Status,
+		merchant.ID,
+	).Scan(&merchant.UpdatedAt)
+
+	return merchant, err
 }
 
 func (r *merchantRepository) Delete(ctx context.Context, id uint64) error {
-	err := r.db.WithContext(ctx).Delete(&entities.Merchant{}, id).Error
+	_, err := r.DB.ExecContext(ctx, `DELETE FROM merchants WHERE id = $1`, id)
 	return err
 }
 
 func (r *merchantRepository) Count(ctx context.Context) (int64, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Model(&entities.Merchant{}).Count(&count).Error
+
+	err := r.DB.GetContext(ctx, &count, `SELECT COUNT(*) FROM merchants`)
 	return count, err
 }
