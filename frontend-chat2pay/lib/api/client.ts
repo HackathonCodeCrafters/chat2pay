@@ -5,7 +5,6 @@ import {
   ApiError,
   ApiRequestOptions,
   ApiResponse,
-  HttpMethod,
   QueryParams,
 } from "./types";
 
