@@ -4,6 +4,7 @@ import (
 	"chat2pay/config/yaml"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/sarulabs/di/v2"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -19,13 +20,13 @@ func NewAdapter() *[]di.Def {
 				// Generate DSN string from config
 				var generateConnectionString = func() string {
 					return fmt.Sprintf(
-						"host=%s port=%d dbname=%s user=%s password=%s sslmode=%s application_name=%s",
+						"host=%s port=%s dbname=%s user=%s password=%s sslmode=%v application_name=%s",
 						config.DB.Host,
 						config.DB.Port,
 						config.DB.DbName,
 						config.DB.Username,
 						config.DB.Password,
-						true,
+						config.DB.SSLMode,
 						config.App.Name,
 					)
 				}

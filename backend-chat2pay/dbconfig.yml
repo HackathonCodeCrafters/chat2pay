@@ -1,0 +1,11 @@
+development:
+  dialect: postgres
+  datasource: dbname=chat2pay sslmode=disable
+  dir: ./migration
+  table: migration
+
+production:
+  dialect: postgres
+  datasource: dbname=chat2pay sslmode=disable
+  dir: ./migration
+  table: migration

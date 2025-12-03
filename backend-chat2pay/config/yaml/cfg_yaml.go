@@ -27,6 +27,7 @@ type DB struct {
 	DbName   string `yaml:"db_name" json:"db_name"`
 	Username string `yaml:"username" json:"username"`
 	Password string `yaml:"password" json:"password"`
+	SSLMode  string `yaml:"ssl_mode" json:"ssl_mode"`
 	//MaxOpen       int    `yaml:"max_open" json:"max_open"`
 	//MaxIdle       int    `yaml:"max_idle" json:"max_idle"`
 	//TimeOutSecond int    `yaml:"time_out_second" json:"time_out_second"`
