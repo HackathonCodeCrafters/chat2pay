@@ -3,18 +3,21 @@ package repositories
 import (
 	"chat2pay/internal/entities"
 	"context"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 type ProductRepository interface {
 	Create(ctx context.Context, product *entities.Product) (*entities.Product, error)
-	FindAll(ctx context.Context, merchantId uint64, limit, offset int) ([]entities.Product, error)
-	FindOneById(ctx context.Context, id uint64) (*entities.Product, error)
-	FindByCategoryId(ctx context.Context, categoryId uint64, limit, offset int) ([]entities.Product, error)
+	FindAll(ctx context.Context, merchantId string, limit, offset int) ([]entities.Product, error)
+	FindOneById(ctx context.Context, id string) (*entities.Product, error)
+	FindByCategoryId(ctx context.Context, categoryId string, limit, offset int) ([]entities.Product, error)
 	Update(ctx context.Context, product *entities.Product) (*entities.Product, error)
-	Delete(ctx context.Context, id uint64) error
-	UpdateStock(ctx context.Context, id uint64, quantity int) error
-	Count(ctx context.Context, merchantId uint64) (int64, error)
+	Delete(ctx context.Context, id string) error
+	UpdateStock(ctx context.Context, id string, quantity int) error
+	Count(ctx context.Context, merchantId string) (int64, error)
+
+	CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error
 }
 
 type productRepository struct {
@@ -30,13 +33,13 @@ func NewProductRepo(db *sqlx.DB) ProductRepository {
 func (r *productRepository) Create(ctx context.Context, product *entities.Product) (*entities.Product, error) {
 	query := `
 		INSERT INTO product (
-			merchant_id, outlet_id, category_id, name, description, sku,
-			price, stock, status
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		    id, merchant_id, outlet_id, category_id, name, description, sku, price, stock, status
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 		RETURNING id, created_at, updated_at;
 	`
 
 	err := r.DB.QueryRowContext(ctx, query,
+		uuid.New().String(),
 		product.MerchantID,
 		product.OutletID,
 		product.CategoryID,
@@ -51,7 +54,7 @@ func (r *productRepository) Create(ctx context.Context, product *entities.Produc
 	return product, err
 }
 
-func (r *productRepository) FindAll(ctx context.Context, merchantId uint64, limit, offset int) ([]entities.Product, error) {
+func (r *productRepository) FindAll(ctx context.Context, merchantId string, limit, offset int) ([]entities.Product, error) {
 	products := []entities.Product{}
 
 	query := `
@@ -68,7 +71,7 @@ func (r *productRepository) FindAll(ctx context.Context, merchantId uint64, limi
 	return products, err
 }
 
-func (r *productRepository) FindOneById(ctx context.Context, id uint64) (*entities.Product, error) {
+func (r *productRepository) FindOneById(ctx context.Context, id string) (*entities.Product, error) {
 	var p entities.Product
 
 	query := `
@@ -90,7 +93,7 @@ func (r *productRepository) FindOneById(ctx context.Context, id uint64) (*entiti
 	return &p, nil
 }
 
-func (r *productRepository) FindByCategoryId(ctx context.Context, categoryId uint64, limit, offset int) ([]entities.Product, error) {
+func (r *productRepository) FindByCategoryId(ctx context.Context, categoryId string, limit, offset int) ([]entities.Product, error) {
 	products := []entities.Product{}
 
 	query := `
@@ -133,12 +136,12 @@ func (r *productRepository) Update(ctx context.Context, product *entities.Produc
 	return product, err
 }
 
-func (r *productRepository) Delete(ctx context.Context, id uint64) error {
+func (r *productRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.DB.ExecContext(ctx, `DELETE FROM products WHERE id = $1`, id)
 	return err
 }
 
-func (r *productRepository) UpdateStock(ctx context.Context, id uint64, quantity int) error {
+func (r *productRepository) UpdateStock(ctx context.Context, id string, quantity int) error {
 	_, err := r.DB.ExecContext(ctx,
 		`UPDATE product SET stock = stock + $1 WHERE id = $2`,
 		quantity, id,
@@ -146,7 +149,7 @@ func (r *productRepository) UpdateStock(ctx context.Context, id uint64, quantity
 	return err
 }
 
-func (r *productRepository) Count(ctx context.Context, merchantId uint64) (int64, error) {
+func (r *productRepository) Count(ctx context.Context, merchantId string) (int64, error) {
 	var count int64
 
 	query := `
@@ -156,4 +159,19 @@ func (r *productRepository) Count(ctx context.Context, merchantId uint64) (int64
 
 	err := r.DB.GetContext(ctx, &count, query, merchantId)
 	return count, err
+}
+
+func (r *productRepository) CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error {
+	query := `
+		INSERT INTO product_embedding (
+			id, product_id, content, embedding
+		) VALUES ($1,$2,$3,$4);
+	`
+
+	_, err := r.DB.ExecContext(ctx, query, uuid.New().String(), embedding.ProductId, embedding.Content, embedding.Embedding)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

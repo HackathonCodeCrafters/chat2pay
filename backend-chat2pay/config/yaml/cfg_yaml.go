@@ -11,6 +11,7 @@ type Config struct {
 	JWT     JWT     `yaml:"jwt" json:"jwt"`
 	Logger  Logger  `yaml:"logger" json:"logger"`
 	Kolosal Kolosal `yaml:"kolosal"json:"kolosal"`
+	Gemini  Gemini  `yaml:"gemini" json:"gemini"`
 }
 
 type App struct {
@@ -39,6 +40,10 @@ type Kolosal struct {
 	URL       string `yaml:"url" json:"url"`
 	APIKey    string `yaml:"api_key" json:"api_key"`
 	ModelName string `yaml:"model_name" json:"model_name"`
+}
+
+type Gemini struct {
+	APIKey string `yaml:"api_key" json:"api_key"`
 }
 
 type JWT struct {

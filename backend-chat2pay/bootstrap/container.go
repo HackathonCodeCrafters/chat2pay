@@ -41,5 +41,10 @@ func NewContainer() (di.Container, error) {
 		return di.Container{}, err
 	}
 
+	// Load Package
+	if err := builder.Add(*LoadPackage()...); err != nil {
+		return di.Container{}, err
+	}
+
 	return builder.Build(), nil
 }

@@ -16,4 +16,6 @@ const (
 
 	ProductRepositoryName  = "product.repository"
 	MerchantRepositoryName = "merchant.repository"
+
+	GeminiLLMName = "gemini.llm.package"
 )

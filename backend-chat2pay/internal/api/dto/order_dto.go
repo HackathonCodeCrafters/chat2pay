@@ -6,22 +6,22 @@ import (
 )
 
 type OrderItemRequest struct {
-	ProductID uint64 `json:"product_id" validate:"required"`
+	ProductID string `json:"product_id" validate:"required"`
 	Quantity  int    `json:"quantity" validate:"required,gt=0"`
 }
 
 type OrderRequest struct {
-	CustomerID     uint64             `json:"customer_id" validate:"required"`
-	MerchantID     uint64             `json:"merchant_id" validate:"required"`
-	OutletID       *uint64            `json:"outlet_id"`
+	CustomerID     string             `json:"customer_id" validate:"required"`
+	MerchantID     string             `json:"merchant_id" validate:"required"`
+	OutletID       *string            `json:"outlet_id"`
 	Items          []OrderItemRequest `json:"items" validate:"required,min=1"`
 	ShippingAmount float64            `json:"shipping_amount" validate:"gte=0"`
 	DiscountAmount float64            `json:"discount_amount" validate:"gte=0"`
 }
 
 type OrderItemResponse struct {
-	ID                  uint64         `json:"id"`
-	ProductID           uint64         `json:"product_id"`
+	ID                  string         `json:"id"`
+	ProductID           string         `json:"product_id"`
 	Product             *ProductSimple `json:"product,omitempty"`
 	ProductNameSnapshot string         `json:"product_name_snapshot"`
 	UnitPrice           float64        `json:"unit_price"`
@@ -31,32 +31,32 @@ type OrderItemResponse struct {
 }
 
 type ProductSimple struct {
-	ID   uint64  `json:"id"`
+	ID   string  `json:"id"`
 	Name string  `json:"name"`
 	SKU  *string `json:"sku,omitempty"`
 }
 
 type CustomerSimple struct {
-	ID    uint64  `json:"id"`
+	ID    string  `json:"id"`
 	Name  string  `json:"name"`
 	Email *string `json:"email,omitempty"`
 	Phone *string `json:"phone,omitempty"`
 }
 
 type MerchantSimple struct {
-	ID    uint64 `json:"id"`
+	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
 type OrderResponse struct {
-	ID             uint64              `json:"id"`
+	ID             string              `json:"id"`
 	OrderNumber    string              `json:"order_number"`
-	CustomerID     uint64              `json:"customer_id"`
+	CustomerID     string              `json:"customer_id"`
 	Customer       *CustomerSimple     `json:"customer,omitempty"`
-	MerchantID     uint64              `json:"merchant_id"`
+	MerchantID     string              `json:"merchant_id"`
 	Merchant       *MerchantSimple     `json:"merchant,omitempty"`
-	OutletID       *uint64             `json:"outlet_id,omitempty"`
+	OutletID       *string             `json:"outlet_id,omitempty"`
 	Status         string              `json:"status"`
 	SubtotalAmount float64             `json:"subtotal_amount"`
 	ShippingAmount float64             `json:"shipping_amount"`

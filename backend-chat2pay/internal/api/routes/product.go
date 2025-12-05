@@ -11,6 +11,7 @@ func ProductRouter(router fiber.Router, handler *handlers.ProductHandler) {
 	// Public routes
 	products.Get("/", handler.GetAll)
 	products.Get("/:id", handler.GetById)
+	products.Post("/", handler.Create)
 
 	//// Protected routes - merchant only
 	//products.Post("/", jwt.JWTProtected(authMdwr), jwt.RequireRole("merchant"), handler.Create)

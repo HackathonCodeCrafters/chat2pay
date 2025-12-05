@@ -1,10 +1,10 @@
 -- +migrate Up
 CREATE TYPE product_status_enum AS ENUM ('active', 'inactive', 'archived');
 CREATE TABLE IF NOT EXISTS product (
-                                        id BIGSERIAL PRIMARY KEY,
-                                        merchant_id BIGINT NOT NULL,
-                                        outlet_id BIGINT NULL,
-                                        category_id BIGINT NULL,
+                                        id uuid PRIMARY KEY,
+                                        merchant_id uuid NOT NULL,
+                                        outlet_id uuid NULL,
+                                        category_id uuid NULL,
                                         name VARCHAR(200) NOT NULL,
     description TEXT NULL,
     sku VARCHAR(100) NULL,

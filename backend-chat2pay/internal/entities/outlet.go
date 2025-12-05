@@ -3,8 +3,8 @@ package entities
 import "time"
 
 type Outlet struct {
-	ID         uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
-	MerchantID uint64    `gorm:"not null;index:idx_outlets_merchant_id" json:"merchant_id"`
+	ID         string    `gorm:"primaryKey;autoIncrement" json:"id"`
+	MerchantID string    `gorm:"not null;index:idx_outlets_merchant_id" json:"merchant_id"`
 	Name       string    `gorm:"type:varchar(150);not null" json:"name"`
 	Address    *string   `gorm:"type:text" json:"address,omitempty"`
 	City       *string   `gorm:"type:varchar(100)" json:"city,omitempty"`

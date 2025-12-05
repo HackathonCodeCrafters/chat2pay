@@ -15,7 +15,7 @@ type CustomerLoginRequest struct {
 }
 
 type CustomerAuthResponse struct {
-	ID          uint64  `json:"id"`
+	ID          string  `json:"id"`
 	Name        string  `json:"name"`
 	Email       *string `json:"email,omitempty"`
 	Phone       *string `json:"phone,omitempty"`

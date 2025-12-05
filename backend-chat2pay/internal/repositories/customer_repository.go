@@ -12,12 +12,12 @@ import (
 type CustomerRepository interface {
 	Create(ctx context.Context, customer *entities.Customer) (*entities.Customer, error)
 	FindAll(ctx context.Context, limit, offset int) ([]entities.Customer, error)
-	FindOneById(ctx context.Context, id uint64) (*entities.Customer, error)
+	FindOneById(ctx context.Context, id string) (*entities.Customer, error)
 	FindOneByEmail(ctx context.Context, email string) (*entities.Customer, error)
 	FindOneByPhone(ctx context.Context, phone string) (*entities.Customer, error)
-	UpdatePassword(ctx context.Context, id uint64, passwordHash string) error
+	UpdatePassword(ctx context.Context, id string, passwordHash string) error
 	Update(ctx context.Context, customer *entities.Customer) (*entities.Customer, error)
-	Delete(ctx context.Context, id uint64) error
+	Delete(ctx context.Context, id string) error
 	Count(ctx context.Context) (int64, error)
 }
 
@@ -74,7 +74,7 @@ func (r *customerRepository) FindAll(ctx context.Context, limit, offset int) ([]
 	return customers, err
 }
 
-func (r *customerRepository) FindOneById(ctx context.Context, id uint64) (*entities.Customer, error) {
+func (r *customerRepository) FindOneById(ctx context.Context, id string) (*entities.Customer, error) {
 	query := `
 		SELECT id, name, email, phone, password_hash, created_at, updated_at
 		FROM customers
@@ -91,7 +91,7 @@ func (r *customerRepository) FindOneById(ctx context.Context, id uint64) (*entit
 	}
 
 	// Check if record was found
-	if customer.ID == 0 {
+	if customer.ID == "" {
 		return nil, nil
 	}
 
@@ -115,7 +115,7 @@ func (r *customerRepository) FindOneByEmail(ctx context.Context, email string) (
 	}
 
 	// Check if record was found
-	if customer.ID == 0 {
+	if customer.ID == "" {
 		return nil, nil
 	}
 
@@ -139,7 +139,7 @@ func (r *customerRepository) FindOneByPhone(ctx context.Context, phone string) (
 	}
 
 	// Check if record was found
-	if customer.ID == 0 {
+	if customer.ID == "" {
 		return nil, nil
 	}
 
@@ -170,12 +170,12 @@ func (r *customerRepository) Update(ctx context.Context, customer *entities.Cust
 	return customer, nil
 }
 
-func (r *customerRepository) UpdatePassword(ctx context.Context, id uint64, passwordHash string) error {
+func (r *customerRepository) UpdatePassword(ctx context.Context, id string, passwordHash string) error {
 	query := `UPDATE customers SET password_hash = $1, updated_at = $2 WHERE id = $3`
 	return r.db.WithContext(ctx).Exec(query, passwordHash, time.Now(), id).Error
 }
 
-func (r *customerRepository) Delete(ctx context.Context, id uint64) error {
+func (r *customerRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM customers WHERE id = $1`
 	return r.db.WithContext(ctx).Exec(query, id).Error
 }

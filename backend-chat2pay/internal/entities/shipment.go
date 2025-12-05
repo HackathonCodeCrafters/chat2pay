@@ -3,8 +3,8 @@ package entities
 import "time"
 
 type Shipment struct {
-	ID                 uint64     `gorm:"primaryKey;autoIncrement" json:"id"`
-	OrderID            uint64     `gorm:"not null;uniqueIndex:uq_shipments_order_id" json:"order_id"`
+	ID                 string     `gorm:"primaryKey;autoIncrement" json:"id"`
+	OrderID            string     `gorm:"not null;uniqueIndex:uq_shipments_order_id" json:"order_id"`
 	CourierName        *string    `gorm:"type:varchar(100)" json:"courier_name,omitempty"`
 	TrackingNumber     *string    `gorm:"type:varchar(100)" json:"tracking_number,omitempty"`
 	Status             string     `gorm:"type:enum('pending','picked_up','in_transit','delivered','returned');not null;default:'pending';index:idx_shipments_status" json:"status"`

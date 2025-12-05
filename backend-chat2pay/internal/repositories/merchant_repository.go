@@ -9,10 +9,10 @@ import (
 type MerchantRepository interface {
 	Create(ctx context.Context, merchant *entities.Merchant) (*entities.Merchant, error)
 	FindAll(ctx context.Context, limit, offset int) ([]entities.Merchant, error)
-	FindOneById(ctx context.Context, id uint64) (*entities.Merchant, error)
+	FindOneById(ctx context.Context, id string) (*entities.Merchant, error)
 	FindOneByEmail(ctx context.Context, email string) (*entities.Merchant, error)
 	Update(ctx context.Context, merchant *entities.Merchant) (*entities.Merchant, error)
-	Delete(ctx context.Context, id uint64) error
+	Delete(ctx context.Context, id string) error
 	Count(ctx context.Context) (int64, error)
 }
 
@@ -44,7 +44,7 @@ func (r *merchantRepository) Create(ctx context.Context, merchant *entities.Merc
 	return merchant, err
 }
 
-func (r *merchantRepository) FindOneById(ctx context.Context, id uint64) (*entities.Merchant, error) {
+func (r *merchantRepository) FindOneById(ctx context.Context, id string) (*entities.Merchant, error) {
 	var merchant entities.Merchant
 
 	query := `
@@ -123,7 +123,7 @@ func (r *merchantRepository) Update(ctx context.Context, merchant *entities.Merc
 	return merchant, err
 }
 
-func (r *merchantRepository) Delete(ctx context.Context, id uint64) error {
+func (r *merchantRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.DB.ExecContext(ctx, `DELETE FROM merchants WHERE id = $1`, id)
 	return err
 }

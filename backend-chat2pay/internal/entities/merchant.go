@@ -16,7 +16,7 @@ const (
 
 type Merchant struct {
 	gorm.Model
-	ID        uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
+	ID        string    `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name      string    `gorm:"type:varchar(150);not null" json:"name"`
 	LegalName *string   `gorm:"type:varchar(200)" json:"legal_name,omitempty"`
 	Email     string    `gorm:"type:varchar(150);not null;uniqueIndex" json:"email"`

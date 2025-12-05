@@ -29,7 +29,6 @@ func main() {
 			Name:  "http",
 			Usage: "Run Chat2Pay http",
 			Action: func(context.Context, *cli.Command) error {
-				fmt.Println("kesini blog goblg")
 				config := ctn.Get(bootstrap.ConfigDefName).(*yaml.Config)
 
 				app := fiber.New()

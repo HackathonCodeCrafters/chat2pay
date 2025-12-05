@@ -20,8 +20,8 @@ const (
 
 type MerchantUser struct {
 	gorm.Model
-	ID           uint64             `gorm:"primaryKey;autoIncrement" json:"id"`
-	MerchantID   uint64             `gorm:"not null;index:idx_merchant_users_merchant_id;uniqueIndex:uq_merchant_users_merchant_email,priority:1"`
+	ID           string             `gorm:"primaryKey;autoIncrement" json:"id"`
+	MerchantID   string             `gorm:"not null;index:idx_merchant_users_merchant_id;uniqueIndex:uq_merchant_users_merchant_email,priority:1"`
 	Name         string             `gorm:"type:varchar(150);not null"`
 	Email        string             `gorm:"type:varchar(150);not null;uniqueIndex:uq_merchant_users_merchant_email,priority:2"`
 	PasswordHash string             `gorm:"type:text;not null"`

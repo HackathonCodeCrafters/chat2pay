@@ -1,8 +1,8 @@
 
 -- +migrate Up
 CREATE TABLE product_embedding (
-                                   id SERIAL PRIMARY KEY,
-                                   product_id INT REFERENCES product(id),
+                                   id uuid PRIMARY KEY,
+                                   product_id uuid REFERENCES product(id),
                                    content TEXT NOT NULL,
                                    embedding vector(1536)
 );

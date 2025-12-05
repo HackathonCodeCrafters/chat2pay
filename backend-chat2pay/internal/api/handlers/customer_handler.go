@@ -48,12 +48,11 @@ func (h *CustomerHandler) GetAll(c *fiber.Ctx) error {
 }
 
 func (h *CustomerHandler) GetById(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
-	response := h.customerService.GetById(c.Context(), id)
+	response := h.customerService.GetById(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -63,8 +62,7 @@ func (h *CustomerHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *CustomerHandler) Update(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
@@ -73,7 +71,7 @@ func (h *CustomerHandler) Update(c *fiber.Ctx) error {
 		return c.Status(400).JSON(presenter.ErrorResponse(err))
 	}
 
-	response := h.customerService.Update(c.Context(), id, &req)
+	response := h.customerService.Update(c.Context(), c.Params("id"), &req)
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -83,12 +81,11 @@ func (h *CustomerHandler) Update(c *fiber.Ctx) error {
 }
 
 func (h *CustomerHandler) Delete(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
-	response := h.customerService.Delete(c.Context(), id)
+	response := h.customerService.Delete(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
