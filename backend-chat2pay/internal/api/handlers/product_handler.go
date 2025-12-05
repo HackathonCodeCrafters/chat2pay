@@ -37,9 +37,11 @@ func (h *ProductHandler) Create(c *fiber.Ctx) error {
 func (h *ProductHandler) GetAll(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
-	merchantId, _ := strconv.ParseUint(c.Query("merchant_id", "0"), 10, 64)
+	if c.Query("merchant_id") == "" {
+		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
+	}
 
-	response := h.productService.GetAll(c.Context(), merchantId, page, limit)
+	response := h.productService.GetAll(c.Context(), c.Query("merchant_id"), page, limit)
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -49,12 +51,11 @@ func (h *ProductHandler) GetAll(c *fiber.Ctx) error {
 }
 
 func (h *ProductHandler) GetById(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
-	response := h.productService.GetById(c.Context(), id)
+	response := h.productService.GetById(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -64,8 +65,7 @@ func (h *ProductHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *ProductHandler) Update(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
@@ -74,7 +74,7 @@ func (h *ProductHandler) Update(c *fiber.Ctx) error {
 		return c.Status(400).JSON(presenter.ErrorResponse(err))
 	}
 
-	response := h.productService.Update(c.Context(), id, &req)
+	response := h.productService.Update(c.Context(), c.Params("id"), &req)
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -84,12 +84,11 @@ func (h *ProductHandler) Update(c *fiber.Ctx) error {
 }
 
 func (h *ProductHandler) Delete(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
-	response := h.productService.Delete(c.Context(), id)
+	response := h.productService.Delete(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))

@@ -37,8 +37,9 @@ func (h *OrderHandler) Create(c *fiber.Ctx) error {
 func (h *OrderHandler) GetAll(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
-	merchantId, _ := strconv.ParseUint(c.Query("merchant_id", "0"), 10, 64)
-	customerId, _ := strconv.ParseUint(c.Query("customer_id", "0"), 10, 64)
+
+	merchantId := c.Query("merchant_id")
+	customerId := c.Query("customer_id")
 
 	response := h.orderService.GetAll(c.Context(), merchantId, customerId, page, limit)
 
@@ -50,12 +51,10 @@ func (h *OrderHandler) GetAll(c *fiber.Ctx) error {
 }
 
 func (h *OrderHandler) GetById(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
-
-	response := h.orderService.GetById(c.Context(), id)
+	response := h.orderService.GetById(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -65,17 +64,15 @@ func (h *OrderHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *OrderHandler) UpdateStatus(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
-
 	var req dto.OrderStatusUpdateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(presenter.ErrorResponse(err))
 	}
 
-	response := h.orderService.UpdateStatus(c.Context(), id, req.Status)
+	response := h.orderService.UpdateStatus(c.Context(), c.Params("id"), req.Status)
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -85,12 +82,11 @@ func (h *OrderHandler) UpdateStatus(c *fiber.Ctx) error {
 }
 
 func (h *OrderHandler) Delete(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
-	response := h.orderService.Delete(c.Context(), id)
+	response := h.orderService.Delete(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))

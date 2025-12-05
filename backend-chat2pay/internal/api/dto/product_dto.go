@@ -6,9 +6,9 @@ import (
 )
 
 type ProductRequest struct {
-	MerchantID  uint64  `json:"merchant_id" validate:"required"`
-	OutletID    *uint64 `json:"outlet_id"`
-	CategoryID  *uint64 `json:"category_id"`
+	MerchantID  string  `json:"merchant_id" validate:"required"`
+	OutletID    *string `json:"outlet_id"`
+	CategoryID  *string `json:"category_id"`
 	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description"`
 	SKU         string  `json:"sku"`
@@ -18,10 +18,10 @@ type ProductRequest struct {
 }
 
 type ProductResponse struct {
-	ID          uint64                 `json:"id"`
-	MerchantID  uint64                 `json:"merchant_id"`
-	OutletID    *uint64                `json:"outlet_id,omitempty"`
-	CategoryID  *uint64                `json:"category_id,omitempty"`
+	ID          string                 `json:"id"`
+	MerchantID  string                 `json:"merchant_id"`
+	OutletID    *string                `json:"outlet_id,omitempty"`
+	CategoryID  *string                `json:"category_id,omitempty"`
 	Category    *ProductCategorySimple `json:"category,omitempty"`
 	Name        string                 `json:"name"`
 	Description *string                `json:"description,omitempty"`
@@ -35,12 +35,12 @@ type ProductResponse struct {
 }
 
 type ProductCategorySimple struct {
-	ID   uint64 `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
 type ProductImageResponse struct {
-	ID        uint64 `json:"id"`
+	ID        string `json:"id"`
 	ImageURL  string `json:"image_url"`
 	IsPrimary bool   `json:"is_primary"`
 }

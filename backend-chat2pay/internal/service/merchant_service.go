@@ -15,9 +15,9 @@ import (
 type MerchantService interface {
 	Create(ctx context.Context, req *dto.MerchantRequest) *presenter.Response
 	GetAll(ctx context.Context, page, limit int) *presenter.Response
-	GetById(ctx context.Context, id uint64) *presenter.Response
-	Update(ctx context.Context, id uint64, req *dto.MerchantRequest) *presenter.Response
-	Delete(ctx context.Context, id uint64) *presenter.Response
+	GetById(ctx context.Context, id string) *presenter.Response
+	Update(ctx context.Context, id string, req *dto.MerchantRequest) *presenter.Response
+	Delete(ctx context.Context, id string) *presenter.Response
 }
 
 type merchantService struct {
@@ -105,7 +105,7 @@ func (s *merchantService) GetAll(ctx context.Context, page, limit int) *presente
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *merchantService) GetById(ctx context.Context, id uint64) *presenter.Response {
+func (s *merchantService) GetById(ctx context.Context, id string) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("merchant_service_getbyid", s.cfg.Logger.Enable)
@@ -127,7 +127,7 @@ func (s *merchantService) GetById(ctx context.Context, id uint64) *presenter.Res
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *merchantService) Update(ctx context.Context, id uint64, req *dto.MerchantRequest) *presenter.Response {
+func (s *merchantService) Update(ctx context.Context, id string, req *dto.MerchantRequest) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("merchant_service_update", s.cfg.Logger.Enable)
@@ -177,7 +177,7 @@ func (s *merchantService) Update(ctx context.Context, id uint64, req *dto.Mercha
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *merchantService) Delete(ctx context.Context, id uint64) *presenter.Response {
+func (s *merchantService) Delete(ctx context.Context, id string) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("merchant_service_delete", s.cfg.Logger.Enable)

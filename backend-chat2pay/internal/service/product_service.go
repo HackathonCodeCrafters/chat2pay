@@ -5,6 +5,7 @@ import (
 	"chat2pay/internal/api/dto"
 	"chat2pay/internal/api/presenter"
 	"chat2pay/internal/entities"
+	"chat2pay/internal/pkg/llm/gemini"
 	"chat2pay/internal/pkg/logger"
 	"chat2pay/internal/repositories"
 	"context"
@@ -14,22 +15,24 @@ import (
 
 type ProductService interface {
 	Create(ctx context.Context, req *dto.ProductRequest) *presenter.Response
-	GetAll(ctx context.Context, merchantId uint64, page, limit int) *presenter.Response
-	GetById(ctx context.Context, id uint64) *presenter.Response
-	Update(ctx context.Context, id uint64, req *dto.ProductRequest) *presenter.Response
-	Delete(ctx context.Context, id uint64) *presenter.Response
+	GetAll(ctx context.Context, merchantId string, page, limit int) *presenter.Response
+	GetById(ctx context.Context, id string) *presenter.Response
+	Update(ctx context.Context, id string, req *dto.ProductRequest) *presenter.Response
+	Delete(ctx context.Context, id string) *presenter.Response
 }
 
 type productService struct {
 	productRepo  repositories.ProductRepository
 	merchantRepo repositories.MerchantRepository
+	llm          *gemini.GeminiLLM
 	cfg          *yaml.Config
 }
 
-func NewProductService(productRepo repositories.ProductRepository, merchantRepo repositories.MerchantRepository, cfg *yaml.Config) ProductService {
+func NewProductService(productRepo repositories.ProductRepository, merchantRepo repositories.MerchantRepository, llm *gemini.GeminiLLM, cfg *yaml.Config) ProductService {
 	return &productService{
 		productRepo:  productRepo,
 		merchantRepo: merchantRepo,
+		llm:          llm,
 		cfg:          cfg,
 	}
 }
@@ -41,16 +44,16 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 	)
 
 	log.Info("checking if merchant exists")
-	merchant, err := s.merchantRepo.FindOneById(ctx, req.MerchantID)
-	if err != nil {
-		log.Error(fmt.Sprintf("error checking merchant: %v", err))
-		return response.WithCode(500).WithError(errors.New("something went wrong"))
-	}
-
-	if merchant == nil {
-		log.Warn("merchant not found")
-		return response.WithCode(404).WithError(errors.New("merchant not found"))
-	}
+	//merchant, err := s.merchantRepo.FindOneById(ctx, req.MerchantID)
+	//if err != nil {
+	//	log.Error(fmt.Sprintf("error checking merchant: %v", err))
+	//	return response.WithCode(500).WithError(errors.New("something went wrong"))
+	//}
+	//
+	//if merchant == nil {
+	//	log.Warn("merchant not found")
+	//	return response.WithCode(404).WithError(errors.New("merchant not found"))
+	//}
 
 	product := &entities.Product{
 		MerchantID:  req.MerchantID,
@@ -71,6 +74,29 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 	log.Info("creating product")
 	created, err := s.productRepo.Create(ctx, product)
 	if err != nil {
+		fmt.Println("err -> ", err)
+		log.Error(fmt.Sprintf("error creating product: %v", err))
+		return response.WithCode(500).WithError(errors.New("failed to create product"))
+	}
+
+	//Embedding product
+	emb, err := s.llm.EmbedQuery(ctx, *product.Description)
+	fmt.Println("emb --> ", emb)
+
+	if err != nil {
+		fmt.Println("err embedding -> ", err)
+		log.Error(fmt.Sprintf("error creating product: %v", err))
+		return response.WithCode(500).WithError(errors.New("failed to create product"))
+	}
+
+	s.productRepo.CreateProductEmbedding(ctx, &entities.ProductEmbedding{
+		ProductId: created.ID,
+		Content:   fmt.Sprintf(`%s - %s`, product.Name, *product.Description),
+		Embedding: emb,
+	})
+
+	if err != nil {
+		fmt.Println("err x -> ", err)
 		log.Error(fmt.Sprintf("error creating product: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to create product"))
 	}
@@ -79,7 +105,7 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 	return response.WithCode(201).WithData(data)
 }
 
-func (s *productService) GetAll(ctx context.Context, merchantId uint64, page, limit int) *presenter.Response {
+func (s *productService) GetAll(ctx context.Context, merchantId string, page, limit int) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("product_service_getall", s.cfg.Logger.Enable)
@@ -97,6 +123,7 @@ func (s *productService) GetAll(ctx context.Context, merchantId uint64, page, li
 	log.Info("fetching products")
 	products, err := s.productRepo.FindAll(ctx, merchantId, limit, offset)
 	if err != nil {
+		fmt.Println("err --> ", err)
 		log.Error(fmt.Sprintf("error fetching products: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to fetch products"))
 	}
@@ -111,7 +138,7 @@ func (s *productService) GetAll(ctx context.Context, merchantId uint64, page, li
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *productService) GetById(ctx context.Context, id uint64) *presenter.Response {
+func (s *productService) GetById(ctx context.Context, id string) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("product_service_getbyid", s.cfg.Logger.Enable)
@@ -133,7 +160,7 @@ func (s *productService) GetById(ctx context.Context, id uint64) *presenter.Resp
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *productService) Update(ctx context.Context, id uint64, req *dto.ProductRequest) *presenter.Response {
+func (s *productService) Update(ctx context.Context, id string, req *dto.ProductRequest) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("product_service_update", s.cfg.Logger.Enable)
@@ -174,7 +201,7 @@ func (s *productService) Update(ctx context.Context, id uint64, req *dto.Product
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *productService) Delete(ctx context.Context, id uint64) *presenter.Response {
+func (s *productService) Delete(ctx context.Context, id string) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("product_service_delete", s.cfg.Logger.Enable)

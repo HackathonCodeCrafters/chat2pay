@@ -15,10 +15,10 @@ import (
 
 type OrderService interface {
 	Create(ctx context.Context, req *dto.OrderRequest) *presenter.Response
-	GetAll(ctx context.Context, merchantId, customerId uint64, page, limit int) *presenter.Response
-	GetById(ctx context.Context, id uint64) *presenter.Response
-	UpdateStatus(ctx context.Context, id uint64, status string) *presenter.Response
-	Delete(ctx context.Context, id uint64) *presenter.Response
+	GetAll(ctx context.Context, merchantId, customerId string, page, limit int) *presenter.Response
+	GetById(ctx context.Context, id string) *presenter.Response
+	UpdateStatus(ctx context.Context, id string, status string) *presenter.Response
+	Delete(ctx context.Context, id string) *presenter.Response
 }
 
 type orderService struct {
@@ -141,7 +141,7 @@ func (s *orderService) Create(ctx context.Context, req *dto.OrderRequest) *prese
 	return response.WithCode(201).WithData(data)
 }
 
-func (s *orderService) GetAll(ctx context.Context, merchantId, customerId uint64, page, limit int) *presenter.Response {
+func (s *orderService) GetAll(ctx context.Context, merchantId, customerId string, page, limit int) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("order_service_getall", s.cfg.Logger.Enable)
@@ -173,7 +173,7 @@ func (s *orderService) GetAll(ctx context.Context, merchantId, customerId uint64
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *orderService) GetById(ctx context.Context, id uint64) *presenter.Response {
+func (s *orderService) GetById(ctx context.Context, id string) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("order_service_getbyid", s.cfg.Logger.Enable)
@@ -195,7 +195,7 @@ func (s *orderService) GetById(ctx context.Context, id uint64) *presenter.Respon
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *orderService) UpdateStatus(ctx context.Context, id uint64, status string) *presenter.Response {
+func (s *orderService) UpdateStatus(ctx context.Context, id string, status string) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("order_service_updatestatus", s.cfg.Logger.Enable)
@@ -238,7 +238,7 @@ func (s *orderService) UpdateStatus(ctx context.Context, id uint64, status strin
 	return response.WithCode(200).WithData(data)
 }
 
-func (s *orderService) Delete(ctx context.Context, id uint64) *presenter.Response {
+func (s *orderService) Delete(ctx context.Context, id string) *presenter.Response {
 	var (
 		response = presenter.Response{}
 		log      = logger.NewLog("order_service_delete", s.cfg.Logger.Enable)

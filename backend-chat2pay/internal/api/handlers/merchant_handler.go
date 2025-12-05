@@ -48,12 +48,11 @@ func (h *MerchantHandler) GetAll(c *fiber.Ctx) error {
 }
 
 func (h *MerchantHandler) GetById(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
 
-	response := h.merchantService.GetById(c.Context(), id)
+	response := h.merchantService.GetById(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -63,17 +62,15 @@ func (h *MerchantHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *MerchantHandler) Update(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
-
 	var req dto.MerchantRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(presenter.ErrorResponse(err))
 	}
 
-	response := h.merchantService.Update(c.Context(), id, &req)
+	response := h.merchantService.Update(c.Context(), c.Params("id"), &req)
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
@@ -83,12 +80,10 @@ func (h *MerchantHandler) Update(c *fiber.Ctx) error {
 }
 
 func (h *MerchantHandler) Delete(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
+	if c.Params("id") == "" {
 		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
 	}
-
-	response := h.merchantService.Delete(c.Context(), id)
+	response := h.merchantService.Delete(c.Context(), c.Params("id"))
 
 	if response.Errors != nil {
 		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))

@@ -17,8 +17,8 @@ type MerchantLoginRequest struct {
 }
 
 type MerchantAuthResponse struct {
-	ID          uint64           `json:"id"`
-	MerchantID  uint64           `json:"merchant_id"`
+	ID          string           `json:"id"`
+	MerchantID  string           `json:"merchant_id"`
 	Merchant    *MerchantSimple2 `json:"merchant,omitempty"`
 	Name        string           `json:"name"`
 	Email       string           `json:"email"`
@@ -28,7 +28,7 @@ type MerchantAuthResponse struct {
 }
 
 type MerchantSimple2 struct {
-	ID     uint64 `json:"id"`
+	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Email  string `json:"email"`
 	Status string `json:"status"`
@@ -40,8 +40,8 @@ func ToMerchantAuthResponse(merchantUser *entities.MerchantUser, token string) M
 		MerchantID:  merchantUser.MerchantID,
 		Name:        merchantUser.Name,
 		Email:       merchantUser.Email,
-		Role:        merchantUser.Role,
-		Status:      merchantUser.Status,
+		Role:        string(merchantUser.Role),
+		Status:      string(merchantUser.Status),
 		AccessToken: token,
 	}
 

@@ -2,14 +2,16 @@ package yaml
 
 import (
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
+	"os"
 )
 
 type Config struct {
-	App    App    `yaml:"app,omitempty" json:"app"`
-	DB     DB     `yaml:"db" json:"db"`
-	JWT    JWT    `yaml:"jwt" json:"jwt"`
-	Logger Logger `yaml:"logger" json:"logger"`
+	App     App     `yaml:"app,omitempty" json:"app"`
+	DB      DB      `yaml:"db" json:"db"`
+	JWT     JWT     `yaml:"jwt" json:"jwt"`
+	Logger  Logger  `yaml:"logger" json:"logger"`
+	Kolosal Kolosal `yaml:"kolosal"json:"kolosal"`
+	Gemini  Gemini  `yaml:"gemini" json:"gemini"`
 }
 
 type App struct {
@@ -26,11 +28,22 @@ type DB struct {
 	DbName   string `yaml:"db_name" json:"db_name"`
 	Username string `yaml:"username" json:"username"`
 	Password string `yaml:"password" json:"password"`
+	SSLMode  string `yaml:"ssl_mode" json:"ssl_mode"`
 	//MaxOpen       int    `yaml:"max_open" json:"max_open"`
 	//MaxIdle       int    `yaml:"max_idle" json:"max_idle"`
 	//TimeOutSecond int    `yaml:"time_out_second" json:"time_out_second"`
 	//LifeTimeMs    int    `yaml:"life_time_ms" json:"life_time_ms"`
 	//Charset       string `yaml:"charset" json:"charset"`
+}
+
+type Kolosal struct {
+	URL       string `yaml:"url" json:"url"`
+	APIKey    string `yaml:"api_key" json:"api_key"`
+	ModelName string `yaml:"model_name" json:"model_name"`
+}
+
+type Gemini struct {
+	APIKey string `yaml:"api_key" json:"api_key"`
 }
 
 type JWT struct {
@@ -45,7 +58,7 @@ type Logger struct {
 func NewConfig() (*Config, error) {
 	var config *Config
 
-	yfile, err := ioutil.ReadFile("./config/yaml/app.yaml")
+	yfile, err := os.ReadFile("./config/yaml/app.yaml")
 
 	if err != nil {
 		return nil, err

@@ -14,7 +14,7 @@ type MerchantRequest struct {
 }
 
 type MerchantResponse struct {
-	ID        uint64    `json:"id"`
+	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	LegalName *string   `json:"legal_name,omitempty"`
 	Email     string    `json:"email"`

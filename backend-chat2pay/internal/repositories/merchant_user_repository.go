@@ -10,8 +10,8 @@ import (
 type MerchantUserRepository interface {
 	Create(ctx context.Context, merchantUser *entities.MerchantUser) (*entities.MerchantUser, error)
 	FindOneByEmail(ctx context.Context, email string) (*entities.MerchantUser, error)
-	FindOneById(ctx context.Context, id uint64) (*entities.MerchantUser, error)
-	FindByMerchantId(ctx context.Context, merchantId uint64) ([]entities.MerchantUser, error)
+	FindOneById(ctx context.Context, id string) (*entities.MerchantUser, error)
+	FindByMerchantId(ctx context.Context, merchantId string) ([]entities.MerchantUser, error)
 }
 
 type merchantUserRepository struct {
@@ -49,7 +49,7 @@ func (r *merchantUserRepository) FindOneByEmail(ctx context.Context, email strin
 	return &merchantUser, nil
 }
 
-func (r *merchantUserRepository) FindOneById(ctx context.Context, id uint64) (*entities.MerchantUser, error) {
+func (r *merchantUserRepository) FindOneById(ctx context.Context, id string) (*entities.MerchantUser, error) {
 	merchantUser := entities.MerchantUser{}
 	err := r.db.WithContext(ctx).
 		Preload("Merchant").
@@ -66,7 +66,7 @@ func (r *merchantUserRepository) FindOneById(ctx context.Context, id uint64) (*e
 	return &merchantUser, nil
 }
 
-func (r *merchantUserRepository) FindByMerchantId(ctx context.Context, merchantId uint64) ([]entities.MerchantUser, error) {
+func (r *merchantUserRepository) FindByMerchantId(ctx context.Context, merchantId string) ([]entities.MerchantUser, error) {
 	var merchantUsers []entities.MerchantUser
 	err := r.db.WithContext(ctx).
 		Where("merchant_id = ?", merchantId).

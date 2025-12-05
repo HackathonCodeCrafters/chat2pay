@@ -9,12 +9,12 @@ import (
 )
 
 type AuthMiddleware interface {
-	GenerateToken(userID uint64, email string, role string) (*string, error)
+	GenerateToken(userID string, email string, role string) (*string, error)
 	ValidateToken(tokenString string) (*Claims, error)
 }
 
 type Claims struct {
-	UserID uint64 `json:"user_id"`
+	UserID string `json:"user_id"`
 	Email  string `json:"email"`
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
@@ -30,7 +30,7 @@ func NewAuthMiddleware(cfg *yaml.Config) AuthMiddleware {
 	}
 }
 
-func (m *authMiddleware) GenerateToken(userID uint64, email string, role string) (*string, error) {
+func (m *authMiddleware) GenerateToken(userID string, email string, role string) (*string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
 	claims := &Claims{

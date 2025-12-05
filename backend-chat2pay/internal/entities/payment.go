@@ -3,8 +3,8 @@ package entities
 import "time"
 
 type Payment struct {
-	ID            uint64     `gorm:"primaryKey;autoIncrement" json:"id"`
-	OrderID       uint64     `gorm:"not null;uniqueIndex:uq_payments_order_id" json:"order_id"`
+	ID            string     `gorm:"primaryKey;autoIncrement" json:"id"`
+	OrderID       string     `gorm:"not null;uniqueIndex:uq_payments_order_id" json:"order_id"`
 	PaymentMethod string     `gorm:"type:varchar(50);not null" json:"payment_method"`
 	Provider      *string    `gorm:"type:varchar(50)" json:"provider,omitempty"`
 	Amount        float64    `gorm:"type:decimal(15,2);not null" json:"amount"`

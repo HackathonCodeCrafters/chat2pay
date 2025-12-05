@@ -20,7 +20,7 @@ services:
 
   postgres:
     container_name: postgres_svc
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg16
     ports:
       - "5432:5432"
     networks:

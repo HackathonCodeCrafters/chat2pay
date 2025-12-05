@@ -6,7 +6,7 @@ ARG GO_BUILD_COMMAND="go build -tags static_all"
 RUN apk update && apk --no-cache add  build-base  git bash  coreutils openssh  openssl
 
 
-# this command if you get source from bitbucket repos
+# this cmd if you get source from bitbucket repos
 # Create the directory where the application will reside
 RUN mkdir -p /go/src/chat2pay
 
