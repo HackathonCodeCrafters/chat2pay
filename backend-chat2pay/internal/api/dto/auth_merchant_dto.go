@@ -36,18 +36,18 @@ type MerchantSimple2 struct {
 
 func ToMerchantAuthResponse(merchantUser *entities.MerchantUser, token string) MerchantAuthResponse {
 	response := MerchantAuthResponse{
-		ID:          merchantUser.ID,
-		MerchantID:  merchantUser.MerchantID,
+		ID:          merchantUser.ID.String(),
+		MerchantID:  merchantUser.MerchantID.String(),
 		Name:        merchantUser.Name,
 		Email:       merchantUser.Email,
 		Role:        string(merchantUser.Role),
-		Status:      string(merchantUser.Status),
+		Status:      "active",
 		AccessToken: token,
 	}
 
 	if merchantUser.Merchant != nil {
 		response.Merchant = &MerchantSimple2{
-			ID:     merchantUser.Merchant.ID,
+			ID:     merchantUser.Merchant.ID.String(),
 			Name:   merchantUser.Merchant.Name,
 			Email:  merchantUser.Merchant.Email,
 			Status: merchantUser.Merchant.Status,

@@ -80,11 +80,11 @@ type OrderStatusUpdateRequest struct {
 
 func ToOrderResponse(order *entities.Order) OrderResponse {
 	response := OrderResponse{
-		ID:             order.ID,
+		ID:             order.ID.String(),
 		OrderNumber:    order.OrderNumber,
-		CustomerID:     order.CustomerID,
-		MerchantID:     order.MerchantID,
-		OutletID:       order.OutletID,
+		CustomerID:     order.CustomerID.String(),
+		MerchantID:     order.MerchantID.String(),
+		OutletID:       nil,
 		Status:         order.Status,
 		SubtotalAmount: order.SubtotalAmount,
 		ShippingAmount: order.ShippingAmount,
@@ -96,7 +96,7 @@ func ToOrderResponse(order *entities.Order) OrderResponse {
 
 	if order.Customer != nil {
 		response.Customer = &CustomerSimple{
-			ID:    order.Customer.ID,
+			ID:    order.Customer.ID.String(),
 			Name:  order.Customer.Name,
 			Email: order.Customer.Email,
 			Phone: order.Customer.Phone,
@@ -105,7 +105,7 @@ func ToOrderResponse(order *entities.Order) OrderResponse {
 
 	if order.Merchant != nil {
 		response.Merchant = &MerchantSimple{
-			ID:    order.Merchant.ID,
+			ID:    order.Merchant.ID.String(),
 			Name:  order.Merchant.Name,
 			Email: order.Merchant.Email,
 		}
@@ -115,18 +115,18 @@ func ToOrderResponse(order *entities.Order) OrderResponse {
 		items := make([]OrderItemResponse, len(order.Items))
 		for i, item := range order.Items {
 			itemResp := OrderItemResponse{
-				ID:                  item.ID,
-				ProductID:           item.ProductID,
+				ID:                  item.ID.String(),
+				ProductID:           item.ProductID.String(),
 				ProductNameSnapshot: item.ProductNameSnapshot,
 				UnitPrice:           item.UnitPrice,
-				Quantity:            item.Qty,
+				Quantity:            item.Quantity,
 				TotalPrice:          item.TotalPrice,
 				CreatedAt:           item.CreatedAt,
 			}
 
 			if item.Product != nil {
 				itemResp.Product = &ProductSimple{
-					ID:   item.Product.ID,
+					ID:   item.Product.ID.String(),
 					Name: item.Product.Name,
 					SKU:  item.Product.SKU,
 				}

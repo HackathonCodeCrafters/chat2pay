@@ -4,6 +4,7 @@ services:
   backend:
     build:
       context: .
+      dockerfile: Dockerfile.dev
     working_dir: /go/src/chat2pay
     container_name: chat2pay-be
     hostname: backend-chat2pay

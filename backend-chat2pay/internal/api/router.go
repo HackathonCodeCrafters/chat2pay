@@ -27,12 +27,10 @@ func NewRouter(ctn di.Container) *fiber.App {
 		})
 	})
 
-	// Routes
-	//api.AuthRouter(api, merchantAuthHandler, customerAuthHandler)
-	//routes.MerchantRouter(api, merchantHandler, authMdwr)
-	routes.ProductRouter(api, ctn.Get(bootstrap.ProductHandlerName).(*handlers.ProductHandler))
-	//routes.CustomerRouter(api, customerHandler, authMdwr)
-	//routes.OrderRouter(api, orderHandler, authMdwr)
+	// Payment routes
+	paymentHandler := ctn.Get(bootstrap.PaymentHandlerName).(*handlers.PaymentHandler)
+	webhookHandler := ctn.Get(bootstrap.WebhookHandlerName).(*handlers.WebhookHandler)
+	routes.PaymentRoutes(api, paymentHandler, webhookHandler)
 
 	return router
 }

@@ -79,7 +79,7 @@ func (s *customerAuthService) Register(ctx context.Context, req *dto.CustomerReg
 	}
 
 	log.Info("generating token")
-	token, err := s.authMdwr.GenerateToken(createdCustomer.ID, *createdCustomer.Email, "customer")
+	token, err := s.authMdwr.GenerateToken(createdCustomer.ID.String(), *createdCustomer.Email, "customer")
 	if err != nil {
 		log.Error(fmt.Sprintf("error generating token: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to generate token"))
@@ -115,7 +115,7 @@ func (s *customerAuthService) Login(ctx context.Context, req *dto.CustomerLoginR
 	}
 
 	log.Info("generating token")
-	token, err := s.authMdwr.GenerateToken(customer.ID, *customer.Email, "customer")
+	token, err := s.authMdwr.GenerateToken(customer.ID.String(), *customer.Email, "customer")
 	if err != nil {
 		log.Error(fmt.Sprintf("error generating token: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to generate token"))

@@ -58,10 +58,10 @@ type ProductListResponse struct {
 
 func ToProductResponse(product *entities.Product) ProductResponse {
 	response := ProductResponse{
-		ID:          product.ID,
-		MerchantID:  product.MerchantID,
-		OutletID:    product.OutletID,
-		CategoryID:  product.CategoryID,
+		ID:          product.ID.String(),
+		MerchantID:  product.MerchantID.String(),
+		OutletID:    nil,
+		CategoryID:  nil,
 		Name:        product.Name,
 		Description: product.Description,
 		SKU:         product.SKU,
@@ -74,7 +74,7 @@ func ToProductResponse(product *entities.Product) ProductResponse {
 
 	if product.Category != nil {
 		response.Category = &ProductCategorySimple{
-			ID:   product.Category.ID,
+			ID:   product.Category.ID.String(),
 			Name: product.Category.Name,
 		}
 	}
@@ -83,7 +83,7 @@ func ToProductResponse(product *entities.Product) ProductResponse {
 		images := make([]ProductImageResponse, len(product.Images))
 		for i, img := range product.Images {
 			images[i] = ProductImageResponse{
-				ID:        img.ID,
+				ID:        img.ID.String(),
 				ImageURL:  img.ImageURL,
 				IsPrimary: img.IsPrimary,
 			}

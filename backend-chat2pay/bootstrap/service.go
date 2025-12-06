@@ -1,8 +1,7 @@
 package bootstrap
 
 import (
-	"chat2pay/config/yaml"
-	"chat2pay/internal/pkg/llm/mistral"
+	"chat2pay/internal/payment/xendit"
 	"chat2pay/internal/repositories"
 	"chat2pay/internal/service"
 	"github.com/sarulabs/di/v2"
@@ -11,16 +10,13 @@ import (
 func LoadService() *[]di.Def {
 	return &[]di.Def{
 		{
-			Name: ProductServiceName,
+			Name: PaymentServiceName,
 			Build: func(ctn di.Container) (interface{}, error) {
-				productRepo := ctn.Get(ProductRepositoryName).(repositories.ProductRepository)
-				merchantRepo := ctn.Get(MerchantRepositoryName).(repositories.MerchantRepository)
-				//geminiModel := ctn.Get(GeminiLLMName).(*gemini.GeminiLLM)
-				//openAIModel := ctn.Get(OpenAILLMName).(*openai.OpenAI)
-				mistralModel := ctn.Get(MistralLLMName).(*mistral.MistralLLM)
-
-				config := ctn.Get(ConfigDefName).(*yaml.Config)
-				return service.NewProductService(productRepo, merchantRepo, mistralModel, config), nil
+				paymentRepo := ctn.Get(PaymentRepositoryName).(repositories.PaymentRepository)
+				paymentLogRepo := ctn.Get(PaymentLogRepositoryName).(repositories.PaymentLogRepository)
+				// OrderRepo set to nil - payment service handles this gracefully
+				xenditClient := ctn.Get(XenditClientName).(*xendit.Client)
+				return service.NewPaymentService(paymentRepo, paymentLogRepo, nil, xenditClient), nil
 			},
 		},
 	}

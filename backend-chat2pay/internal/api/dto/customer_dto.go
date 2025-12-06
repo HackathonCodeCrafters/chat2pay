@@ -29,7 +29,7 @@ type CustomerListResponse struct {
 
 func ToCustomerResponse(customer *entities.Customer) CustomerResponse {
 	return CustomerResponse{
-		ID:        customer.ID,
+		ID:        customer.ID.String(),
 		Name:      customer.Name,
 		Email:     customer.Email,
 		Phone:     customer.Phone,

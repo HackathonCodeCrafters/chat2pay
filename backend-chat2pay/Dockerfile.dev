@@ -49,4 +49,4 @@ WORKDIR $PROJECT_DIR
 COPY --from=builder $BUILDDIR/chat2pay chat2pay
 
 
-CMD ["sh","-c", "/opt/chat2pay/chat2pay"]
+CMD ["sh","-c", "/opt/chat2pay/chat2pay http"]

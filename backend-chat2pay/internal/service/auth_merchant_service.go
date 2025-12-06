@@ -72,7 +72,6 @@ func (s *merchantAuthService) Register(ctx context.Context, req *dto.MerchantReg
 		LegalName: stringPtr(req.LegalName),
 		Email:     req.Email,
 		Phone:     stringPtr(req.Phone),
-		Status:    "pending_verification",
 	}
 
 	createdMerchant, err := s.merchantRepo.Create(ctx, merchant)
@@ -88,7 +87,7 @@ func (s *merchantAuthService) Register(ctx context.Context, req *dto.MerchantReg
 		Email:        req.Email,
 		PasswordHash: string(hashedPassword),
 		Role:         "owner",
-		Status:       "active",
+		IsActive:     true,
 	}
 
 	createdUser, err := s.merchantUserRepo.Create(ctx, merchantUser)
@@ -98,7 +97,7 @@ func (s *merchantAuthService) Register(ctx context.Context, req *dto.MerchantReg
 	}
 
 	log.Info("generating token")
-	token, err := s.authMdwr.GenerateToken(createdUser.ID, createdUser.Email, "merchant")
+	token, err := s.authMdwr.GenerateToken(createdUser.ID.String(), createdUser.Email, "merchant")
 	if err != nil {
 		log.Error(fmt.Sprintf("error generating token: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to generate token"))
@@ -127,7 +126,7 @@ func (s *merchantAuthService) Login(ctx context.Context, req *dto.MerchantLoginR
 		return response.WithCode(401).WithError(errors.New("invalid email or password"))
 	}
 
-	if merchantUser.Status != "active" {
+	if !merchantUser.IsActive {
 		log.Warn("user is not active")
 		return response.WithCode(401).WithError(errors.New("account is not active"))
 	}
@@ -140,7 +139,7 @@ func (s *merchantAuthService) Login(ctx context.Context, req *dto.MerchantLoginR
 	}
 
 	log.Info("generating token")
-	token, err := s.authMdwr.GenerateToken(merchantUser.ID, merchantUser.Email, "merchant")
+	token, err := s.authMdwr.GenerateToken(merchantUser.ID.String(), merchantUser.Email, "merchant")
 	if err != nil {
 		log.Error(fmt.Sprintf("error generating token: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to generate token"))

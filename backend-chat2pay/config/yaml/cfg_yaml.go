@@ -10,6 +10,7 @@ type Config struct {
 	DB        DB        `yaml:"db" json:"db"`
 	Websocket Websocket `yaml:"web_socket"  json:"web_socket"`
 	JWT       JWT       `yaml:"jwt" json:"jwt"`
+	Xendit    Xendit    `yaml:"xendit" json:"xendit"`
 	Logger    Logger    `yaml:"logger" json:"logger"`
 	Kolosal   Kolosal   `yaml:"kolosal"json:"kolosal"`
 	Gemini    Gemini    `yaml:"gemini" json:"gemini"`
@@ -60,6 +61,13 @@ type Mistral struct {
 
 type OpenAI struct {
 	APIKey string `yaml:"api_key" json:"api_key"`
+}
+
+type Xendit struct {
+	APIKey                   string `yaml:"api_key" json:"api_key"`
+	WebhookVerificationToken string `yaml:"webhook_verification_token" json:"webhook_verification_token"`
+	Environment              string `yaml:"environment" json:"environment"`
+	CallbackURL              string `yaml:"callback_url" json:"callback_url"`
 }
 
 type JWT struct {

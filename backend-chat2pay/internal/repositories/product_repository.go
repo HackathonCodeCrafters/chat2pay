@@ -3,11 +3,11 @@ package repositories
 import (
 	"chat2pay/internal/entities"
 	"context"
-	"fmt"
+	// "fmt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/pgvector/pgvector-go"
+	// "github.com/pgvector/pgvector-go"
 )
 
 type ProductRepository interface {
@@ -21,9 +21,9 @@ type ProductRepository interface {
 	UpdateStock(ctx context.Context, id string, quantity int) error
 	Count(ctx context.Context, merchantId string) (int64, error)
 
-	CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error
-	GetProductEmbedding(ctx context.Context, vector []float32) (*entities.ProductEmbedding, error)
-	GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error)
+	// CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error
+	// GetProductEmbedding(ctx context.Context, vector []float32) (*entities.ProductEmbedding, error)
+	// GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error)
 }
 
 type productRepository struct {
@@ -217,60 +217,61 @@ func (r *productRepository) Count(ctx context.Context, merchantId string) (int64
 
 	err := r.DB.GetContext(ctx, &count, query, merchantId)
 	return count, err
-}
-
-func (r *productRepository) GetProductEmbedding(ctx context.Context, vector []float32) (*entities.ProductEmbedding, error) {
-	query := fmt.Sprintf(`SELECT id, product_id, embedding <-> $1 AS distance
-		FROM product_embedding
-		ORDER BY distance ASC
-		LIMIT 5;
-	`)
-
-	embed := &entities.ProductEmbedding{}
-	if err := r.DB.QueryRowContext(ctx, query, pgvector.NewVector(vector)).Scan(&embed.ID, &embed.ProductId, &embed.Distance); err != nil {
-		return nil, err
-	}
-
-	return embed, nil
-}
-
-func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error) {
-	query := `
-		SELECT id, product_id, embedding <-> $1 AS distance
-		FROM product_embedding
-		ORDER BY distance ASC
-		LIMIT $2;
-	`
-
-	rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector), 5)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var results []entities.ProductEmbedding
-	for rows.Next() {
-		var pe entities.ProductEmbedding
-		if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Distance); err != nil {
-			return nil, err
-		}
-		results = append(results, pe)
-	}
-
-	return results, nil
-}
-
-func (r *productRepository) CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error {
-	query := `
-		INSERT INTO product_embedding (
-			id, product_id, content, embedding
-		) VALUES ($1,$2,$3,$4);
-	`
-
-	_, err := r.DB.ExecContext(ctx, query, uuid.New().String(), embedding.ProductId, embedding.Content, pgvector.NewVector(embedding.Embedding))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	// }
+	//
+	//	func (r *productRepository) GetProductEmbedding(ctx context.Context, vector []float32) (*entities.ProductEmbedding, error) {
+	//		query := fmt.Sprintf(`SELECT id, product_id, embedding <-> $1 AS distance
+	//			FROM product_embedding
+	//			ORDER BY distance ASC
+	//			LIMIT 5;
+	//		`)
+	//
+	//		embed := &entities.ProductEmbedding{}
+	//		if err := r.DB.QueryRowContext(ctx, query, pgvector.NewVector(vector)).Scan(&embed.ID, &embed.ProductId, &embed.Distance); err != nil {
+	//			return nil, err
+	//		}
+	//
+	//		return embed, nil
+	//	}
+	//
+	//	func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error) {
+	//		query := `
+	//			SELECT id, product_id, embedding <-> $1 AS distance
+	//			FROM product_embedding
+	//			ORDER BY distance ASC
+	//			LIMIT $2;
+	//		`
+	//
+	//		rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector), 5)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		defer rows.Close()
+	//
+	//		var results []entities.ProductEmbedding
+	//		for rows.Next() {
+	//			var pe entities.ProductEmbedding
+	//			if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Distance); err != nil {
+	//				return nil, err
+	//			}
+	//			results = append(results, pe)
+	//		}
+	//
+	//		return results, nil
+	//	}
+	//
+	//	func (r *productRepository) CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error {
+	//		query := `
+	//			INSERT INTO product_embedding (
+	//				id, product_id, content, embedding
+	//			) VALUES ($1,$2,$3,$4);
+	//		`
+	//
+	//		_, err := r.DB.ExecContext(ctx, query, uuid.New().String(), embedding.ProductId, embedding.Content, pgvector.NewVector(embedding.Embedding))
+	//		if err != nil {
+	//			return err
+	//		}
+	//
+	//		return nil
+	//	}
 }

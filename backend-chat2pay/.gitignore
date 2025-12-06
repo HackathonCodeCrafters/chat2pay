@@ -1,4 +1,57 @@
+# Docker files (ignored for development)
 Dockerfile
 docker-compose.yaml
 
+# Binaries
+chat2pay
 chat2pay.exe
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+app.log
+
+# Backup files
+*.backup
+*.bak
+*.sql.backup
+backup/
+
+# Temporary files
+*.tmp
+migration_output.txt
+quick_migrate.sql
+
+# Test files
+test_ids.env
+
+# Environment files with secrets
+*.env
+!.env.example

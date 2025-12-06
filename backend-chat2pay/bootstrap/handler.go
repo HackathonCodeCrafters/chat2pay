@@ -9,17 +9,17 @@ import (
 func LoadHandler() *[]di.Def {
 	return &[]di.Def{
 		{
-			Name: ProductHandlerName,
+			Name: PaymentHandlerName,
 			Build: func(ctn di.Container) (interface{}, error) {
-				productService := ctn.Get(ProductServiceName).(service.ProductService)
-				return handlers.NewProductHandler(productService), nil
+				paymentService := ctn.Get(PaymentServiceName).(service.PaymentService)
+				return handlers.NewPaymentHandler(paymentService), nil
 			},
 		},
 		{
-			Name: CustomerHandlerName,
+			Name: WebhookHandlerName,
 			Build: func(ctn di.Container) (interface{}, error) {
-				productService := ctn.Get(ProductServiceName).(service.ProductService)
-				return handlers.NewProductHandler(productService), nil
+				paymentService := ctn.Get(PaymentServiceName).(service.PaymentService)
+				return handlers.NewWebhookHandler(paymentService), nil
 			},
 		},
 	}

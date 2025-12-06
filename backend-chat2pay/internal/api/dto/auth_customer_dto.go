@@ -25,7 +25,7 @@ type CustomerAuthResponse struct {
 
 func ToCustomerAuthResponse(customer *entities.Customer, token string) CustomerAuthResponse {
 	return CustomerAuthResponse{
-		ID:          customer.ID,
+		ID:          customer.ID.String(),
 		Name:        customer.Name,
 		Email:       customer.Email,
 		Phone:       customer.Phone,

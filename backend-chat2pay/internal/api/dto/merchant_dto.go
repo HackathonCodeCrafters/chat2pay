@@ -33,7 +33,7 @@ type MerchantListResponse struct {
 
 func ToMerchantResponse(merchant *entities.Merchant) MerchantResponse {
 	return MerchantResponse{
-		ID:        merchant.ID,
+		ID:        merchant.ID.String(),
 		Name:      merchant.Name,
 		LegalName: merchant.LegalName,
 		Email:     merchant.Email,

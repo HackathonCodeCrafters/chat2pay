@@ -4,6 +4,7 @@ import (
 	"chat2pay/internal/entities"
 	"context"
 	"database/sql"
+	"github.com/google/uuid"
 	"time"
 
 	"gorm.io/gorm"
@@ -91,7 +92,7 @@ func (r *customerRepository) FindOneById(ctx context.Context, id string) (*entit
 	}
 
 	// Check if record was found
-	if customer.ID == "" {
+	if customer.ID == uuid.Nil {
 		return nil, nil
 	}
 
@@ -115,7 +116,7 @@ func (r *customerRepository) FindOneByEmail(ctx context.Context, email string) (
 	}
 
 	// Check if record was found
-	if customer.ID == "" {
+	if customer.ID == uuid.Nil {
 		return nil, nil
 	}
 
@@ -139,7 +140,7 @@ func (r *customerRepository) FindOneByPhone(ctx context.Context, phone string) (
 	}
 
 	// Check if record was found
-	if customer.ID == "" {
+	if customer.ID == uuid.Nil {
 		return nil, nil
 	}
 

@@ -9,15 +9,15 @@ import (
 func NewRepository() *[]di.Def {
 	return &[]di.Def{
 		{
-			Name: ProductRepositoryName,
+			Name: PaymentRepositoryName,
 			Build: func(ctn di.Container) (interface{}, error) {
-				return repositories.NewProductRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
+				return repositories.NewPaymentRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
 			},
 		},
 		{
-			Name: MerchantRepositoryName,
+			Name: PaymentLogRepositoryName,
 			Build: func(ctn di.Container) (interface{}, error) {
-				return repositories.NewMerchantRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
+				return repositories.NewPaymentLogRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
 			},
 		},
 	}

@@ -22,4 +22,13 @@ const (
 	KolosalLLMName = "kolosal.llm.package"
 	OpenAILLMName  = "openai.llm.package"
 	MistralLLMName = "mistal.llm.package"
+
+	// Payment constants
+	PaymentRepositoryName    = "payment.repository"
+	PaymentLogRepositoryName = "payment_log.repository"
+	OrderRepositoryName      = "order.repository"
+	PaymentServiceName       = "payment.service"
+	PaymentHandlerName       = "payment.handler"
+	WebhookHandlerName       = "webhook.handler"
+	XenditClientName         = "xendit.client"
 )
