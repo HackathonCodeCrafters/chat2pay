@@ -96,3 +96,21 @@ func (h *ProductHandler) Delete(c *fiber.Ctx) error {
 
 	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
 }
+
+func (h *ProductHandler) AskProduct(c *fiber.Ctx) error {
+
+	var req dto.AskProduct
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(presenter.ErrorResponse(err))
+	}
+
+	response := h.productService.AskProduct(c.Context(), &req)
+
+	if response.Errors != nil {
+
+		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
+	}
+
+	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
+}

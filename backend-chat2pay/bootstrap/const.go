@@ -17,5 +17,8 @@ const (
 	ProductRepositoryName  = "product.repository"
 	MerchantRepositoryName = "merchant.repository"
 
-	GeminiLLMName = "gemini.llm.package"
+	GeminiLLMName  = "gemini.llm.package"
+	KolosalLLMName = "kolosal.llm.package"
+	OpenAILLMName  = "openai.llm.package"
+	MistralLLMName = "mistal.llm.package"
 )

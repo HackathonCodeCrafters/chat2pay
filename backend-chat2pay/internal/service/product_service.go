@@ -5,7 +5,7 @@ import (
 	"chat2pay/internal/api/dto"
 	"chat2pay/internal/api/presenter"
 	"chat2pay/internal/entities"
-	"chat2pay/internal/pkg/llm/gemini"
+	"chat2pay/internal/pkg/llm/mistral"
 	"chat2pay/internal/pkg/logger"
 	"chat2pay/internal/repositories"
 	"context"
@@ -19,16 +19,22 @@ type ProductService interface {
 	GetById(ctx context.Context, id string) *presenter.Response
 	Update(ctx context.Context, id string, req *dto.ProductRequest) *presenter.Response
 	Delete(ctx context.Context, id string) *presenter.Response
+	AskProduct(ctx context.Context, req *dto.AskProduct) *presenter.Response
 }
 
 type productService struct {
 	productRepo  repositories.ProductRepository
 	merchantRepo repositories.MerchantRepository
-	llm          *gemini.GeminiLLM
+	llm          *mistral.MistralLLM
 	cfg          *yaml.Config
 }
 
-func NewProductService(productRepo repositories.ProductRepository, merchantRepo repositories.MerchantRepository, llm *gemini.GeminiLLM, cfg *yaml.Config) ProductService {
+func NewProductService(
+	productRepo repositories.ProductRepository,
+	merchantRepo repositories.MerchantRepository,
+	llm *mistral.MistralLLM,
+	cfg *yaml.Config,
+) ProductService {
 	return &productService{
 		productRepo:  productRepo,
 		merchantRepo: merchantRepo,
@@ -81,27 +87,62 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 
 	//Embedding product
 	emb, err := s.llm.EmbedQuery(ctx, *product.Description)
-	fmt.Println("emb --> ", emb)
 
 	if err != nil {
-		fmt.Println("err embedding -> ", err)
 		log.Error(fmt.Sprintf("error creating product: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to create product"))
 	}
 
-	s.productRepo.CreateProductEmbedding(ctx, &entities.ProductEmbedding{
+	err = s.productRepo.CreateProductEmbedding(ctx, &entities.ProductEmbedding{
 		ProductId: created.ID,
 		Content:   fmt.Sprintf(`%s - %s`, product.Name, *product.Description),
 		Embedding: emb,
 	})
 
 	if err != nil {
-		fmt.Println("err x -> ", err)
+		fmt.Println("err -> ", err)
 		log.Error(fmt.Sprintf("error creating product: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to create product"))
 	}
 
 	data := dto.ToProductResponse(created)
+	return response.WithCode(201).WithData(data)
+}
+
+func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *presenter.Response {
+	var (
+		response = presenter.Response{}
+		log      = logger.NewLog("product_service_create", s.cfg.Logger.Enable)
+	)
+
+	//Embedding product
+	emb, err := s.llm.EmbedQuery(ctx, req.Prompt)
+
+	if err != nil {
+		log.Error(fmt.Sprintf("error creating product: %v", err))
+		return response.WithCode(500).WithError(errors.New("failed get product"))
+	}
+
+	embedding, err := s.productRepo.GetProductEmbeddingList(ctx, emb)
+
+	if err != nil {
+		log.Error(fmt.Sprintf("error creating product: %v", err))
+		return response.WithCode(500).WithError(errors.New("failed get product"))
+	}
+
+	trxIds := []string{}
+	for _, productEmbedding := range embedding {
+		trxIds = append(trxIds, productEmbedding.ProductId)
+	}
+
+	product, err := s.productRepo.FindByIDs(ctx, trxIds)
+
+	if err != nil {
+		log.Error(fmt.Sprintf("error creating product: %v", err))
+		return response.WithCode(500).WithError(errors.New("failed get product"))
+	}
+
+	data := dto.ToProductListResponse(product, int64(len(product)), 0, 0)
 	return response.WithCode(201).WithData(data)
 }
 
@@ -120,10 +161,8 @@ func (s *productService) GetAll(ctx context.Context, merchantId string, page, li
 
 	offset := (page - 1) * limit
 
-	log.Info("fetching products")
 	products, err := s.productRepo.FindAll(ctx, merchantId, limit, offset)
 	if err != nil {
-		fmt.Println("err --> ", err)
 		log.Error(fmt.Sprintf("error fetching products: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to fetch products"))
 	}
