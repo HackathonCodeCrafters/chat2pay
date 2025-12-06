@@ -1,6 +1,8 @@
 package entities
 
-import "time"
+import (
+	"time"
+)
 
 type (
 	Product struct {
@@ -26,6 +28,7 @@ type (
 		ID        string    `json:"id"`
 		ProductId string    `json:"product_id"`
 		Content   string    `json:"content"`
-		Embedding []float32 `json:"embedding"`
+		Embedding []float32 `json:"embedding" pg:"type:vector(3)"`
+		Distance  float64   `json:"distance"`
 	}
 )

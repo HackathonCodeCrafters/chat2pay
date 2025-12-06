@@ -3,13 +3,17 @@ package repositories
 import (
 	"chat2pay/internal/entities"
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
+	"github.com/pgvector/pgvector-go"
 )
 
 type ProductRepository interface {
 	Create(ctx context.Context, product *entities.Product) (*entities.Product, error)
 	FindAll(ctx context.Context, merchantId string, limit, offset int) ([]entities.Product, error)
+	FindByIDs(ctx context.Context, ids []string) ([]entities.Product, error)
 	FindOneById(ctx context.Context, id string) (*entities.Product, error)
 	FindByCategoryId(ctx context.Context, categoryId string, limit, offset int) ([]entities.Product, error)
 	Update(ctx context.Context, product *entities.Product) (*entities.Product, error)
@@ -18,6 +22,8 @@ type ProductRepository interface {
 	Count(ctx context.Context, merchantId string) (int64, error)
 
 	CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error
+	GetProductEmbedding(ctx context.Context, vector []float32) (*entities.ProductEmbedding, error)
+	GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error)
 }
 
 type productRepository struct {
@@ -71,6 +77,45 @@ func (r *productRepository) FindAll(ctx context.Context, merchantId string, limi
 	return products, err
 }
 
+func (r *productRepository) FindByIDs(ctx context.Context, ids []string) ([]entities.Product, error) {
+	products := []entities.Product{}
+
+	query := `
+		SELECT 
+			id, merchant_id, outlet_id, category_id, name, description, sku,
+			price, stock, status, created_at, updated_at
+		FROM product 
+		WHERE id = ANY($1)
+		ORDER BY created_at DESC;
+	`
+
+	row, err := r.DB.QueryContext(ctx, query, pq.Array(ids))
+	if err != nil {
+		return nil, err
+	}
+
+	for row.Next() {
+		p := entities.Product{}
+		if err = row.Scan(&p.ID,
+			&p.MerchantID,
+			&p.OutletID,
+			&p.CategoryID,
+			&p.Name,
+			&p.Description,
+			&p.SKU,
+			&p.Price,
+			&p.Stock,
+			&p.Status,
+			&p.CreatedAt,
+			&p.UpdatedAt); err != nil {
+			return nil, err
+		}
+
+		products = append(products, p)
+	}
+	return products, err
+}
+
 func (r *productRepository) FindOneById(ctx context.Context, id string) (*entities.Product, error) {
 	var p entities.Product
 
@@ -81,7 +126,20 @@ func (r *productRepository) FindOneById(ctx context.Context, id string) (*entiti
 		FROM product WHERE id = $1 LIMIT 1;
 	`
 
-	err := r.DB.GetContext(ctx, &p, query, id)
+	err := r.DB.QueryRowContext(ctx, query, id).Scan(
+		&p.ID,
+		&p.MerchantID,
+		&p.OutletID,
+		&p.CategoryID,
+		&p.Name,
+		&p.Description,
+		&p.SKU,
+		&p.Price,
+		&p.Stock,
+		&p.Status,
+		&p.CreatedAt,
+		&p.UpdatedAt,
+	)
 
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
@@ -161,6 +219,47 @@ func (r *productRepository) Count(ctx context.Context, merchantId string) (int64
 	return count, err
 }
 
+func (r *productRepository) GetProductEmbedding(ctx context.Context, vector []float32) (*entities.ProductEmbedding, error) {
+	query := fmt.Sprintf(`SELECT id, product_id, embedding <-> $1 AS distance
+		FROM product_embedding
+		ORDER BY distance ASC
+		LIMIT 5;
+	`)
+
+	embed := &entities.ProductEmbedding{}
+	if err := r.DB.QueryRowContext(ctx, query, pgvector.NewVector(vector)).Scan(&embed.ID, &embed.ProductId, &embed.Distance); err != nil {
+		return nil, err
+	}
+
+	return embed, nil
+}
+
+func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error) {
+	query := `
+		SELECT id, product_id, embedding <-> $1 AS distance
+		FROM product_embedding
+		ORDER BY distance ASC
+		LIMIT $2;
+	`
+
+	rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector), 5)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []entities.ProductEmbedding
+	for rows.Next() {
+		var pe entities.ProductEmbedding
+		if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Distance); err != nil {
+			return nil, err
+		}
+		results = append(results, pe)
+	}
+
+	return results, nil
+}
+
 func (r *productRepository) CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error {
 	query := `
 		INSERT INTO product_embedding (
@@ -168,7 +267,7 @@ func (r *productRepository) CreateProductEmbedding(ctx context.Context, embeddin
 		) VALUES ($1,$2,$3,$4);
 	`
 
-	_, err := r.DB.ExecContext(ctx, query, uuid.New().String(), embedding.ProductId, embedding.Content, embedding.Embedding)
+	_, err := r.DB.ExecContext(ctx, query, uuid.New().String(), embedding.ProductId, embedding.Content, pgvector.NewVector(embedding.Embedding))
 	if err != nil {
 		return err
 	}

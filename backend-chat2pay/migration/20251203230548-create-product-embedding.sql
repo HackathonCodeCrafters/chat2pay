@@ -4,7 +4,7 @@ CREATE TABLE product_embedding (
                                    id uuid PRIMARY KEY,
                                    product_id uuid REFERENCES product(id),
                                    content TEXT NOT NULL,
-                                   embedding vector(1536)
+                                   embedding vector(1024)
 );
 
 -- +migrate Down

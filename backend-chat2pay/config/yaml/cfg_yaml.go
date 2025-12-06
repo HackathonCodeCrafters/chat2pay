@@ -12,6 +12,8 @@ type Config struct {
 	Logger  Logger  `yaml:"logger" json:"logger"`
 	Kolosal Kolosal `yaml:"kolosal"json:"kolosal"`
 	Gemini  Gemini  `yaml:"gemini" json:"gemini"`
+	OpenAI  OpenAI  `yaml:"open_ai" json:"open_ai"`
+	Mistral Mistral `yaml:"mistral" json:"mistral"`
 }
 
 type App struct {
@@ -43,6 +45,14 @@ type Kolosal struct {
 }
 
 type Gemini struct {
+	APIKey string `yaml:"api_key" json:"api_key"`
+}
+
+type Mistral struct {
+	APIKey string `yaml:"api_key" json:"api_key"`
+}
+
+type OpenAI struct {
 	APIKey string `yaml:"api_key" json:"api_key"`
 }
 

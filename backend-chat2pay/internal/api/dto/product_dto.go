@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type AskProduct struct {
+	Prompt string `json:"prompt"`
+}
+
 type ProductRequest struct {
 	MerchantID  string  `json:"merchant_id" validate:"required"`
 	OutletID    *string `json:"outlet_id"`
