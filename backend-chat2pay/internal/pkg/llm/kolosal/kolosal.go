@@ -26,6 +26,22 @@ func NewKolosalLLM(url, apiKey, modelName string) *KolosalLLM {
 	}
 }
 
+func (c *KolosalLLM) ChatWithHistory(ctx context.Context, sessionId string, userMessage string) (string, error) {
+	panic("implement me")
+}
+
+func (c *KolosalLLM) ClassifyIntent(ctx context.Context, userMessage string) (string, error) {
+	panic("implement me")
+}
+
+func (c *KolosalLLM) NewConnection(ctx context.Context, sessionId string) error {
+	panic("implement me")
+}
+
+func (c *KolosalLLM) GetLastMessageContext(ctx context.Context, sessionID string) (string, error) {
+	panic("implement me")
+}
+
 // Call implements the [llms.Model] interface.
 func (c *KolosalLLM) Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error) {
 	return llms.GenerateFromSinglePrompt(ctx, c, prompt, options...)

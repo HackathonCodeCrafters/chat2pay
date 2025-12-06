@@ -6,7 +6,8 @@ import (
 )
 
 type AskProduct struct {
-	Prompt string `json:"prompt"`
+	SessionId string `json:"connection_id"`
+	Prompt    string `json:"prompt"`
 }
 
 type ProductRequest struct {

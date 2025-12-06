@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"chat2pay/config/yaml"
+	"chat2pay/internal/pkg/redis"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -45,6 +46,16 @@ func NewAdapter() *[]di.Def {
 				return obj.(*sqlx.DB).Close()
 			},
 		},
+		{
+			Name:  RedisAdapter,
+			Scope: di.App,
+			Build: func(ctn di.Container) (interface{}, error) {
+				config := ctn.Get(ConfigDefName).(*yaml.Config)
+				// Generate DSN string from config
+				redisClient := redis.NewRedis(config)
+				return redisClient, nil
+			},
+		},
 		//{
 		//	Name:  SocketAdapter,
 		//	Scope: di.App,
@@ -54,7 +65,7 @@ func NewAdapter() *[]di.Def {
 		//		u := url.URL{Scheme: "ws", Host: "localhost:8080", Path: "/echo"}
 		//
 		//		// Establish the WebSocket connection
-		//		ws, err := websocket.Dial(u.String(), "", u.String())
+		//		ws, err := socket.Dial(u.String(), "", u.String())
 		//		if err != nil {
 		//			log.Fatalf("Failed to dial WebSocket: %v", err)
 		//		}
