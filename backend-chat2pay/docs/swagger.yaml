@@ -1,0 +1,1435 @@
+basePath: /api
+definitions:
+  dto.AskProduct:
+    properties:
+      prompt:
+        type: string
+    type: object
+  dto.CustomerAuthResponse:
+    properties:
+      access_token:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+  dto.CustomerListResponse:
+    properties:
+      customers:
+        items:
+          $ref: '#/definitions/dto.CustomerResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.CustomerLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.CustomerRegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  dto.CustomerRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    required:
+    - name
+    type: object
+  dto.CustomerResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CustomerSimple:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  dto.LLMResponse:
+    properties:
+      message:
+        type: string
+      products:
+        items:
+          $ref: '#/definitions/dto.ProductResponse'
+        type: array
+    type: object
+  dto.MerchantAuthResponse:
+    properties:
+      access_token:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      merchant:
+        $ref: '#/definitions/dto.MerchantSimple2'
+      merchant_id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.MerchantListResponse:
+    properties:
+      limit:
+        type: integer
+      merchants:
+        items:
+          $ref: '#/definitions/dto.MerchantResponse'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.MerchantLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.MerchantRegisterRequest:
+    properties:
+      email:
+        type: string
+      legal_name:
+        type: string
+      merchant_name:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+    required:
+    - email
+    - merchant_name
+    - name
+    - password
+    type: object
+  dto.MerchantRequest:
+    properties:
+      email:
+        type: string
+      legal_name:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  dto.MerchantResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      legal_name:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.MerchantSimple:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.MerchantSimple2:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.OrderItemRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  dto.OrderItemResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      product:
+        $ref: '#/definitions/dto.ProductSimple'
+      product_id:
+        type: string
+      product_name_snapshot:
+        type: string
+      quantity:
+        type: integer
+      total_price:
+        type: number
+      unit_price:
+        type: number
+    type: object
+  dto.OrderListResponse:
+    properties:
+      limit:
+        type: integer
+      orders:
+        items:
+          $ref: '#/definitions/dto.OrderResponse'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.OrderRequest:
+    properties:
+      customer_id:
+        type: string
+      discount_amount:
+        minimum: 0
+        type: number
+      items:
+        items:
+          $ref: '#/definitions/dto.OrderItemRequest'
+        minItems: 1
+        type: array
+      merchant_id:
+        type: string
+      outlet_id:
+        type: string
+      shipping_amount:
+        minimum: 0
+        type: number
+    required:
+    - customer_id
+    - items
+    - merchant_id
+    type: object
+  dto.OrderResponse:
+    properties:
+      created_at:
+        type: string
+      customer:
+        $ref: '#/definitions/dto.CustomerSimple'
+      customer_id:
+        type: string
+      discount_amount:
+        type: number
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/dto.OrderItemResponse'
+        type: array
+      merchant:
+        $ref: '#/definitions/dto.MerchantSimple'
+      merchant_id:
+        type: string
+      order_number:
+        type: string
+      outlet_id:
+        type: string
+      shipping_amount:
+        type: number
+      status:
+        type: string
+      subtotal_amount:
+        type: number
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  dto.OrderStatusUpdateRequest:
+    properties:
+      status:
+        enum:
+        - pending
+        - paid
+        - shipped
+        - completed
+        - cancelled
+        type: string
+    required:
+    - status
+    type: object
+  dto.ProductCategorySimple:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.ProductImageResponse:
+    properties:
+      id:
+        type: string
+      image_url:
+        type: string
+      is_primary:
+        type: boolean
+    type: object
+  dto.ProductListResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      products:
+        items:
+          $ref: '#/definitions/dto.ProductResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.ProductRequest:
+    properties:
+      category_id:
+        type: string
+      description:
+        type: string
+      merchant_id:
+        type: string
+      name:
+        type: string
+      outlet_id:
+        type: string
+      price:
+        type: number
+      sku:
+        type: string
+      status:
+        type: string
+      stock:
+        minimum: 0
+        type: integer
+    required:
+    - merchant_id
+    - name
+    - price
+    type: object
+  dto.ProductResponse:
+    properties:
+      category:
+        $ref: '#/definitions/dto.ProductCategorySimple'
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/dto.ProductImageResponse'
+        type: array
+      merchant_id:
+        type: string
+      name:
+        type: string
+      outlet_id:
+        type: string
+      price:
+        type: number
+      sku:
+        type: string
+      status:
+        type: string
+      stock:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  dto.ProductSimple:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      sku:
+        type: string
+    type: object
+  presenter.ErrorResponseSwagger:
+    properties:
+      data:
+        example: ""
+        type: string
+      error:
+        example: error message
+        type: string
+      status:
+        example: false
+        type: boolean
+    type: object
+  presenter.SuccessResponseSwagger:
+    properties:
+      data: {}
+      error:
+        type: string
+      status:
+        example: true
+        type: boolean
+    type: object
+host: localhost:9005
+info:
+  contact:
+    email: support@chat2pay.com
+    name: Chat2Pay Team
+  description: Chat2Pay Backend API - E-commerce platform dengan fitur chat-to-pay
+    menggunakan AI/LLM
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Chat2Pay API
+  version: "1.0"
+paths:
+  /auth/customer/login:
+    post:
+      consumes:
+      - application/json
+      description: Login untuk customer
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CustomerLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CustomerAuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Login Customer
+      tags:
+      - Auth-Customer
+  /auth/customer/register:
+    post:
+      consumes:
+      - application/json
+      description: Registrasi customer baru
+      parameters:
+      - description: Customer registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CustomerRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CustomerAuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Register Customer
+      tags:
+      - Auth-Customer
+  /auth/merchant/login:
+    post:
+      consumes:
+      - application/json
+      description: Login untuk merchant user
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MerchantLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MerchantAuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Login Merchant
+      tags:
+      - Auth-Merchant
+  /auth/merchant/register:
+    post:
+      consumes:
+      - application/json
+      description: Registrasi merchant baru beserta owner user
+      parameters:
+      - description: Merchant registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MerchantRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MerchantAuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Register Merchant
+      tags:
+      - Auth-Merchant
+  /customers:
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan daftar semua customer (Merchant Only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CustomerListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Get All Customers
+      tags:
+      - Customers
+    post:
+      consumes:
+      - application/json
+      description: Membuat customer baru
+      parameters:
+      - description: Customer data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CustomerResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Create Customer
+      tags:
+      - Customers
+  /customers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus customer berdasarkan ID
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.SuccessResponseSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Delete Customer
+      tags:
+      - Customers
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan detail customer berdasarkan ID
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CustomerResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Get Customer by ID
+      tags:
+      - Customers
+    put:
+      consumes:
+      - application/json
+      description: Update data customer berdasarkan ID
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Customer data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CustomerResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Update Customer
+      tags:
+      - Customers
+  /merchants:
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan daftar semua merchant
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MerchantListResponse'
+              type: object
+      summary: Get All Merchants
+      tags:
+      - Merchants
+    post:
+      consumes:
+      - application/json
+      description: Membuat merchant baru
+      parameters:
+      - description: Merchant data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MerchantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MerchantResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Create Merchant
+      tags:
+      - Merchants
+  /merchants/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus merchant berdasarkan ID
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.SuccessResponseSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Delete Merchant
+      tags:
+      - Merchants
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan detail merchant berdasarkan ID
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MerchantResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Get Merchant by ID
+      tags:
+      - Merchants
+    put:
+      consumes:
+      - application/json
+      description: Update data merchant berdasarkan ID
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Merchant data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MerchantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MerchantResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Update Merchant
+      tags:
+      - Merchants
+  /orders:
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan daftar semua order
+      parameters:
+      - description: Filter by Merchant ID
+        in: query
+        name: merchant_id
+        type: string
+      - description: Filter by Customer ID
+        in: query
+        name: customer_id
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.OrderListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Get All Orders
+      tags:
+      - Orders
+    post:
+      consumes:
+      - application/json
+      description: Membuat order baru
+      parameters:
+      - description: Order data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Create Order
+      tags:
+      - Orders
+  /orders/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus order (Merchant Only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.SuccessResponseSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Delete Order
+      tags:
+      - Orders
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan detail order berdasarkan ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Get Order by ID
+      tags:
+      - Orders
+  /orders/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update status order (Merchant Only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.OrderStatusUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Update Order Status
+      tags:
+      - Orders
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan daftar produk berdasarkan merchant
+      parameters:
+      - description: Merchant ID
+        in: query
+        name: merchant_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProductListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Get All Products
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: Membuat produk baru
+      parameters:
+      - description: Product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProductResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Create Product
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus produk berdasarkan ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenter.SuccessResponseSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Delete Product
+      tags:
+      - Products
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan detail produk berdasarkan ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProductResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Get Product by ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: Update data produk berdasarkan ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProductResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      security:
+      - BearerAuth: []
+      summary: Update Product
+      tags:
+      - Products
+  /products/ask:
+    post:
+      consumes:
+      - application/json
+      description: Mencari produk menggunakan AI/LLM dengan natural language query
+      parameters:
+      - description: Prompt pencarian
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AskProduct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/presenter.SuccessResponseSwagger'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.LLMResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponseSwagger'
+      summary: Ask Product (AI Search)
+      tags:
+      - AI-LLM
+securityDefinitions:
+  BearerAuth:
+    description: 'Masukkan token dengan format: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
