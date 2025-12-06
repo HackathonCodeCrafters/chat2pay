@@ -2,6 +2,7 @@ package bootstrap
 
 const (
 	DatabaseAdapter = "database.adapter"
+	SocketAdapter   = "socket.adapter"
 	ConfigDefName   = "config.definition"
 
 	ProductServiceName  = "product.service"

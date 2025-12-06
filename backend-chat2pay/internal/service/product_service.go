@@ -115,36 +115,117 @@ func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *p
 		log      = logger.NewLog("product_service_create", s.cfg.Logger.Enable)
 	)
 
-	//Embedding product
-	emb, err := s.llm.EmbedQuery(ctx, req.Prompt)
-
+	classify, err := s.llm.ClassifyIntent(ctx, req.Prompt)
 	if err != nil {
-		log.Error(fmt.Sprintf("error creating product: %v", err))
-		return response.WithCode(500).WithError(errors.New("failed get product"))
+		return response.WithCode(500).WithError(errors.New("failed classify intent"))
 	}
 
-	embedding, err := s.productRepo.GetProductEmbeddingList(ctx, emb)
+	switch classify.Intent {
+	case "chit_chat":
 
-	if err != nil {
-		log.Error(fmt.Sprintf("error creating product: %v", err))
-		return response.WithCode(500).WithError(errors.New("failed get product"))
+		content, err := s.llm.Chat(ctx, req.Prompt)
+		if err != nil {
+			return response.WithCode(500).WithError(errors.New("failed classify intent"))
+		}
+
+		data := dto.ToLLM(nil, content)
+		return response.WithCode(200).WithData(data)
+
+	case "general_product_request":
+		prompt := fmt.Sprintf("User message: '%s'. Ask a clarifying question.", req.Prompt)
+		answer, err := s.llm.Chat(ctx, prompt)
+		if err != nil {
+			return response.WithCode(500).WithError(errors.New("failed classify intent"))
+		}
+
+		data := dto.ToLLM(nil, answer)
+		return response.WithCode(200).WithData(data)
+	case "specific_product_search":
+		//Embedding product
+		emb, err := s.llm.EmbedQuery(ctx, req.Prompt)
+
+		if err != nil {
+			log.Error(fmt.Sprintf("error creating product: %v", err))
+			return response.WithCode(500).WithError(errors.New("failed get product"))
+		}
+
+		embedding, err := s.productRepo.GetProductEmbeddingList(ctx, emb)
+
+		if err != nil {
+			log.Error(fmt.Sprintf("error creating product: %v", err))
+			return response.WithCode(500).WithError(errors.New("failed get product"))
+		}
+
+		productIds := []string{}
+		for _, productEmbedding := range embedding {
+			productIds = append(productIds, productEmbedding.ProductId)
+		}
+
+		product, err := s.productRepo.FindByIDs(ctx, productIds)
+
+		if err != nil {
+			log.Error(fmt.Sprintf("error creating product: %v", err))
+			return response.WithCode(500).WithError(errors.New("failed get product"))
+		}
+
+		data := dto.ToLLM(&product, "here's your requested product")
+		return response.WithCode(201).WithData(data)
+
+		//case "follow_up":
+		//	// Combine last product result + embedding
+		//	prev := s.session.GetLastMessage(ctx)
+		//	embedding, _ := s.llm.EmbedQuery(ctx, prev+" "+message)
+		//	productIDs, _ := s.productRepo.SearchClosestProducts(ctx, embedding, 5)
+		//	products, _ := s.productRepo.FindProductsByIDs(ctx, productIDs)
+		//	return presenter.NewData(products)
 	}
 
-	trxIds := []string{}
-	for _, productEmbedding := range embedding {
-		trxIds = append(trxIds, productEmbedding.ProductId)
-	}
-
-	product, err := s.productRepo.FindByIDs(ctx, trxIds)
-
-	if err != nil {
-		log.Error(fmt.Sprintf("error creating product: %v", err))
-		return response.WithCode(500).WithError(errors.New("failed get product"))
-	}
-
-	data := dto.ToProductListResponse(product, int64(len(product)), 0, 0)
-	return response.WithCode(201).WithData(data)
+	return response.WithCode(200).WithData("ok")
 }
+
+//func (s *productService) HandleUserMessage(ctx context.Context, prompt string) (string, error) {
+//	// STEP 1: Detect Intent
+//	intent, err := s.llm.ClassifyIntent(ctx, prompt)
+//	if err != nil {
+//		return presenter.NewError("failed to detect intent")
+//	}
+//
+//	switch intent {
+//	case "chit_chat":
+//		return presenter.NewMessage(s.llm.Chat(ctx, message))
+//
+//	case "general_product_request":
+//		// Ask a follow up question using LLM
+//		prompt := fmt.Sprintf("User message: '%s'. Ask a clarifying question.", message)
+//		answer := s.llm.Chat(ctx, prompt)
+//		return presenter.NewMessage(answer)
+//
+//	case "specific_product_search":
+//		// Embed -> Vector search
+//		embedding, err := s.llm.EmbedQuery(ctx, message)
+//		if err != nil {
+//			return presenter.NewError("embedding failed")
+//		}
+//
+//		productIDs, err := s.productRepo.SearchClosestProducts(ctx, embedding, 5)
+//		if err != nil {
+//			return presenter.NewError("no product found")
+//		}
+//
+//		products, _ := s.productRepo.FindProductsByIDs(ctx, productIDs)
+//		return presenter.NewData(products)
+//
+//	case "follow_up":
+//		// Combine last product result + embedding
+//		prev := s.session.GetLastMessage(ctx)
+//		embedding, _ := s.llm.EmbedQuery(ctx, prev+" "+message)
+//		productIDs, _ := s.productRepo.SearchClosestProducts(ctx, embedding, 5)
+//		products, _ := s.productRepo.FindProductsByIDs(ctx, productIDs)
+//		return presenter.NewData(products)
+//	}
+//
+//	return presenter.NewError("unknown intent")
+//}
 
 func (s *productService) GetAll(ctx context.Context, merchantId string, page, limit int) *presenter.Response {
 	var (
