@@ -8,6 +8,20 @@ type Response struct {
 	Errors error       `json:"errors,omitempty"`
 }
 
+// SuccessResponseSwagger untuk dokumentasi Swagger
+type SuccessResponseSwagger struct {
+	Status bool        `json:"status" example:"true"`
+	Data   interface{} `json:"data"`
+	Error  *string     `json:"error"`
+}
+
+// ErrorResponseSwagger untuk dokumentasi Swagger
+type ErrorResponseSwagger struct {
+	Status bool   `json:"status" example:"false"`
+	Data   string `json:"data" example:""`
+	Error  string `json:"error" example:"error message"`
+}
+
 func (r *Response) WithCode(code int) *Response {
 	r.Code = code
 	return r

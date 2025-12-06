@@ -2,14 +2,19 @@ package api
 
 import (
 	"chat2pay/bootstrap"
+	_ "chat2pay/docs"
 	"chat2pay/internal/api/handlers"
 	"chat2pay/internal/api/routes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 	"github.com/sarulabs/di/v2"
 )
 
 func NewRouter(ctn di.Container) *fiber.App {
 	router := fiber.New()
+
+	// Swagger UI
+	router.Get("/swagger/*", swagger.HandlerDefault)
 
 	// API Group
 	api := router.Group("/api")
