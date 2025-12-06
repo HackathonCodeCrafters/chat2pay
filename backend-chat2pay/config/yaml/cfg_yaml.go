@@ -6,14 +6,15 @@ import (
 )
 
 type Config struct {
-	App     App     `yaml:"app,omitempty" json:"app"`
-	DB      DB      `yaml:"db" json:"db"`
-	JWT     JWT     `yaml:"jwt" json:"jwt"`
-	Logger  Logger  `yaml:"logger" json:"logger"`
-	Kolosal Kolosal `yaml:"kolosal"json:"kolosal"`
-	Gemini  Gemini  `yaml:"gemini" json:"gemini"`
-	OpenAI  OpenAI  `yaml:"open_ai" json:"open_ai"`
-	Mistral Mistral `yaml:"mistral" json:"mistral"`
+	App       App       `yaml:"app,omitempty" json:"app"`
+	DB        DB        `yaml:"db" json:"db"`
+	Websocket Websocket `yaml:"web_socket"  json:"web_socket"`
+	JWT       JWT       `yaml:"jwt" json:"jwt"`
+	Logger    Logger    `yaml:"logger" json:"logger"`
+	Kolosal   Kolosal   `yaml:"kolosal"json:"kolosal"`
+	Gemini    Gemini    `yaml:"gemini" json:"gemini"`
+	OpenAI    OpenAI    `yaml:"open_ai" json:"open_ai"`
+	Mistral   Mistral   `yaml:"mistral" json:"mistral"`
 }
 
 type App struct {
@@ -21,6 +22,11 @@ type App struct {
 	Port string `yaml:"port,omitempty" json:"port"`
 	//ReadTimeOut  int    `yaml:"read_time_out" json:"read_time_out"`
 	//WriteTimeOut int    `yaml:"write_time_out" json:"write_time_out"`
+}
+
+type Websocket struct {
+	Host string `json:"host"`
+	Path string `json:"path"`
 }
 
 type DB struct {
