@@ -1,4 +1,11 @@
 
+# Backend
 /backend-chat2pay/config/yaml/app.yaml
 /backend-chat2pay/config/mysql
 /backend-chat2pay/aio
+/backend-chat2pay/*.exe
+/backend-chat2pay/chat2pay
+
+# Frontend
+/frontend-chat2pay/.env.local
+/frontend-chat2pay/.env

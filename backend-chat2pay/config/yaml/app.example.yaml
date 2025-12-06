@@ -1,0 +1,29 @@
+app:
+  name: chat2pay
+  port: 9005
+
+db:
+  dialect: postgres
+  host: localhost
+  port: 5432
+  db_name: chat2pay
+  username: postgres
+  password: your_database_password
+  ssl_mode: disable
+
+# LLM API Keys - pilih salah satu atau lebih
+gemini:
+  api_key: YOUR_GEMINI_API_KEY
+
+open_ai:
+  api_key: YOUR_OPENAI_API_KEY
+
+mistral:
+  api_key: YOUR_MISTRAL_API_KEY
+
+jwt:
+  key: your_secret_jwt_key_here
+  expired_minute: 1440
+
+logger:
+  enable: true

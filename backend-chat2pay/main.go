@@ -15,6 +15,25 @@ import (
 	"log"
 )
 
+// @title Chat2Pay API
+// @version 1.0
+// @description Chat2Pay Backend API - E-commerce platform dengan fitur chat-to-pay menggunakan AI/LLM
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Chat2Pay Team
+// @contact.email support@chat2pay.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:9005
+// @BasePath /api
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Masukkan token dengan format: Bearer {token}
+
 func main() {
 
 	ctn, err := bootstrap.NewContainer()
