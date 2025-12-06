@@ -3,6 +3,7 @@ package bootstrap
 const (
 	DatabaseAdapter = "database.adapter"
 	SocketAdapter   = "socket.adapter"
+	RedisAdapter    = "redis.adapter"
 	ConfigDefName   = "config.definition"
 
 	ProductServiceName  = "product.service"
@@ -18,8 +19,5 @@ const (
 	ProductRepositoryName  = "product.repository"
 	MerchantRepositoryName = "merchant.repository"
 
-	GeminiLLMName  = "gemini.llm.package"
-	KolosalLLMName = "kolosal.llm.package"
-	OpenAILLMName  = "openai.llm.package"
-	MistralLLMName = "mistal.llm.package"
+	LLMPackageName = "llm.package"
 )

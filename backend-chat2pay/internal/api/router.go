@@ -16,6 +16,9 @@ func NewRouter(ctn di.Container) *fiber.App {
 	// Swagger UI
 	router.Get("/swagger/*", swagger.HandlerDefault)
 
+	// Socket
+	handlers.NewSocketEvent(router, ctn)
+
 	// API Group
 	api := router.Group("/api")
 

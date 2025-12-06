@@ -37,6 +37,15 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    container_name: redis_svc
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass wXU7z2HQtBP6mWjHbPsfK96rmnqweawg
+    volumes:
+      - "./aio/redis:/data"
+
 volumes:
   postgres:
     driver: local
