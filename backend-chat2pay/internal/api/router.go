@@ -11,6 +11,9 @@ import (
 func NewRouter(ctn di.Container) *fiber.App {
 	router := fiber.New()
 
+	// Socket
+	handlers.NewSocketEvent(router, ctn)
+
 	// API Group
 	api := router.Group("/api")
 
