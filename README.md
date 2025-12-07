@@ -1,6 +1,10 @@
 # Chat2Pay
 
 <p align="center">
+  <img src="./frontend-chat2pay/public/logo-chat2pay.png" alt="Chat2Pay Logo" width="200">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Go-1.25-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go 1.25">
   <img src="https://img.shields.io/badge/Fiber-v2-00ACD7?style=for-the-badge&logo=go&logoColor=white" alt="Fiber v2">
   <img src="https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL 16">
