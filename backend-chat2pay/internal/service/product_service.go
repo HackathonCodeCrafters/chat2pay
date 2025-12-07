@@ -16,6 +16,7 @@ import (
 
 type ProductService interface {
 	Create(ctx context.Context, req *dto.ProductRequest) *presenter.Response
+	CreateMultiple(ctx context.Context, req *[]dto.ProductRequest) *presenter.Response
 	GetAll(ctx context.Context, merchantId string, page, limit int) *presenter.Response
 	GetById(ctx context.Context, id string) *presenter.Response
 	Update(ctx context.Context, id string, req *dto.ProductRequest) *presenter.Response
@@ -54,9 +55,9 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 	)
 
 	product := &entities.Product{
-		MerchantID:  req.MerchantID,
-		OutletID:    req.OutletID,
-		CategoryID:  req.CategoryID,
+		MerchantID: req.MerchantID,
+		OutletID:   req.OutletID,
+		//CategoryID:  req.CategoryID,
 		Name:        req.Name,
 		Description: stringPtr(req.Description),
 		SKU:         stringPtr(req.SKU),
@@ -78,7 +79,7 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 	}
 
 	//Embedding product
-	emb, err := s.llm.EmbedQuery(ctx, *product.Description)
+	emb, err := s.llm.EmbedQuery(ctx, formatProductForEmbedding(*product))
 
 	if err != nil {
 		log.Error(fmt.Sprintf("error creating product: %v", err))
@@ -98,6 +99,55 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 
 	data := dto.ToProductResponse(created)
 	return response.WithCode(201).WithData(data)
+}
+
+func (s *productService) CreateMultiple(ctx context.Context, req *[]dto.ProductRequest) *presenter.Response {
+	var (
+		response = presenter.Response{}
+		log      = logger.NewLog("product_service_create", s.cfg.Logger.Enable)
+	)
+
+	for _, productPayload := range *req {
+		product := &entities.Product{
+			MerchantID: productPayload.MerchantID,
+			OutletID:   productPayload.OutletID,
+			//CategoryID:  productPayload.CategoryID,
+			Name:        productPayload.Name,
+			Description: stringPtr(productPayload.Description),
+			SKU:         stringPtr(productPayload.SKU),
+			Price:       productPayload.Price,
+			Stock:       productPayload.Stock,
+			Status:      "active",
+		}
+
+		log.Info("creating product")
+		created, err := s.productRepo.Create(ctx, product)
+		if err != nil {
+			log.Error(fmt.Sprintf("error creating product: %v", err))
+			return response.WithCode(500).WithError(errors.New("failed to create product"))
+		}
+
+		//Embedding product
+		emb, err := s.llm.EmbedQuery(ctx, formatProductForEmbedding(*product))
+
+		if err != nil {
+			log.Error(fmt.Sprintf("error creating product: %v", err))
+			return response.WithCode(500).WithError(errors.New("failed to create product"))
+		}
+
+		err = s.productRepo.CreateProductEmbedding(ctx, &entities.ProductEmbedding{
+			ProductId: created.ID,
+			Content:   fmt.Sprintf(`%s - %s`, product.Name, *product.Description),
+			Embedding: emb,
+		})
+
+		if err != nil {
+			log.Error(fmt.Sprintf("error creating product: %v", err))
+			return response.WithCode(500).WithError(errors.New("failed to create product"))
+		}
+
+	}
+	return response.WithCode(201).WithData("ok")
 }
 
 func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *presenter.Response {
@@ -158,7 +208,6 @@ func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *p
 			log.Error(fmt.Sprintf("error creating product: %v", err))
 			return response.WithCode(500).WithError(errors.New("failed get product"))
 		}
-
 		data := dto.ToLLM(&product, "Berikut daftar produk yang mungkin relevan:")
 		return response.WithCode(200).WithData(data)
 
@@ -182,50 +231,6 @@ func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *p
 
 	return response.WithCode(200).WithData("ok")
 }
-
-//func (s *productService) HandleUserMessage(ctx context.Context, prompt string) (string, error) {
-//	// STEP 1: Detect Intent
-//	intent, err := s.llm.ClassifyIntent(ctx, prompt)
-//	if err != nil {
-//		return presenter.NewError("failed to detect intent")
-//	}
-//
-//	switch intent {
-//	case "chit_chat":
-//		return presenter.NewMessage(s.llm.Chat(ctx, message))
-//
-//	case "general_product_request":
-//		// Ask a follow up question using LLM
-//		prompt := fmt.Sprintf("User message: '%s'. Ask a clarifying question.", message)
-//		answer := s.llm.Chat(ctx, prompt)
-//		return presenter.NewMessage(answer)
-//
-//	case "specific_product_search":
-//		// Embed -> Vector search
-//		embedding, err := s.llm.EmbedQuery(ctx, message)
-//		if err != nil {
-//			return presenter.NewError("embedding failed")
-//		}
-//
-//		productIDs, err := s.productRepo.SearchClosestProducts(ctx, embedding, 5)
-//		if err != nil {
-//			return presenter.NewError("no product found")
-//		}
-//
-//		products, _ := s.productRepo.FindProductsByIDs(ctx, productIDs)
-//		return presenter.NewData(products)
-//
-//	case "follow_up":
-//		// Combine last product result + embedding
-//		prev := s.session.GetLastMessage(ctx)
-//		embedding, _ := s.llm.EmbedQuery(ctx, prev+" "+message)
-//		productIDs, _ := s.productRepo.SearchClosestProducts(ctx, embedding, 5)
-//		products, _ := s.productRepo.FindProductsByIDs(ctx, productIDs)
-//		return presenter.NewData(products)
-//	}
-//
-//	return presenter.NewError("unknown intent")
-//}
 
 func (s *productService) GetAll(ctx context.Context, merchantId string, page, limit int) *presenter.Response {
 	var (
@@ -347,4 +352,25 @@ func (s *productService) Delete(ctx context.Context, id string) *presenter.Respo
 	}
 
 	return response.WithCode(200).WithData(map[string]string{"message": "product deleted successfully"})
+}
+
+func formatProductForEmbedding(p entities.Product) string {
+	return fmt.Sprintf(`
+Nama: %s
+Deskripsi: %s
+Harga: %.0f
+Brand: %s
+`,
+		p.Name,
+		ifnil(p.Description),
+		p.Price,
+		p.Name,
+	)
+}
+
+func ifnil(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

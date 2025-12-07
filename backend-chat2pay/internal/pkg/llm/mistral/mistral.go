@@ -17,7 +17,10 @@ type MistralLLM struct {
 
 // NewMistralLLM creates a new instance of your custom LLM.
 func NewMistralLLM(apiKey string, client redis.RedisClient) *MistralLLM {
-	mistral, err := mistral.New(mistral.WithAPIKey(apiKey))
+	mistral, err := mistral.New(
+		mistral.WithAPIKey(apiKey),
+		mistral.WithModel("ministral-14b-latest"),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +66,6 @@ func (c *MistralLLM) ChatWithHistory(ctx context.Context, userMessage string) (s
 	})
 
 	b, _ := json.Marshal(history)
-
 	_, err = c.redisClient.Set(ctx, fmt.Sprintf(`history_context:%s`, sessionId), string(b))
 	if err != nil {
 		return "", err
@@ -74,58 +76,61 @@ func (c *MistralLLM) ChatWithHistory(ctx context.Context, userMessage string) (s
 
 func (c *MistralLLM) ClassifyIntent(ctx context.Context, userMessage string) (string, error) {
 	systemPrompt := `
-		You are an Intent Classification AI for a shopping assistant.
-
-		Classify the user's latest message into ONE of these categories:
-		
-		1. chit_chat
-		- Casual conversation unrelated to shopping.
-		Examples:
-		"hi", "how are you", "where are you from"
-		
-		2. general_product_request
-		- User asks about a product category WITHOUT specific requirements.
-		- They mention only the PRODUCT TYPE or ask for advice.
-		Examples:
-		"I need a mouse", 
-		"Looking for a keyboard", 
-		"Any recommendation for a laptop?",
-		"Saya ingin cari mouse, ada rekomendasi?"
-		
-		⚠ IMPORTANT:
-		- If the user only says a product name + "cocok / bagus / rekomendasi", treat it as general request.
-		
-		3. specific_product_search
-		- User provides ANY detail such as:
-		  - Budget (expensive / murah / under 1M)
-		  - Features (wireless, bluetooth, DPI adjustable, silent click)
-		  - Purpose (gaming, design, work, traveling)
-		  - Brand (Logitech, Razer)
-		  - Specs (RGB, rechargeable, ergonomic)
-		Examples:
-		"mouse wireless murah",
-		"best mouse for designer",
-		"wireless keyboard under $50",
-		"ergonomic mouse for wrist pain"
-		
-		4. follow_up
-		- User message refers to previous discussion.
-		Examples:
-		"yes wireless",
-		"any cheaper?",
-		"show more options"
-		
-		----
-		
-		Rules:
-		- MUST return plain text intent (not JSON).
-		- No explanation or extra words.
-		- Response must be exactly one of:
-		  chit_chat
-		  general_product_request
-		  specific_product_search
-		  follow_up
-		`
+	You are an Intent Classification AI for a shopping assistant.
+	Your ONLY task is to classify the message. DO NOT answer the user.
+	
+	IMPORTANT: When user asks for specifications, details, or features of a product 
+	(using words like "spesifikasi", "fitur", "detail", "apa saja"), ALWAYS classify as "follow_up".
+	
+	Classify the user's message into EXACTLY one of these:
+	
+	1. chit_chat
+	- Small talk unrelated to products.
+	Examples: "hi", "apa kabar", "lagi apa?"
+	
+	2. general_product_request
+	- User mentions a product category WITHOUT ANY requirement.
+	Examples:
+	"I want a new watch"
+	"Looking for a laptop"
+	"Ada mouse bagus?"
+	
+	3. specific_product_search
+	- User includes ANY requirement such as:
+	- budget (murah, di bawah 1 juta)
+	- brand
+	- feature (waterproof, wireless, bluetooth)
+	- use case (gaming, traveling)
+	- specifications (RAM, storage, camera, etc.)
+	Examples:
+	"Jam tangan brand G-SHOCK"
+	"mouse wireless LOGITECH"
+	"Laptop untuk desain"
+	"iPhone dengan RAM besar"
+	
+	4. follow_up
+	- User refers to previous suggestions or asks for details about shown products.
+	- Asking for specifications: "spesifikasi nya?", "fiturnya apa?", "detailnya?"
+	- Asking for alternatives: "yang lebih murah", "ada warna lain?"
+	- Requesting more information: "bisa lihat lebih detail?", "apa keunggulannya?"
+	Examples:
+	"yang lebih murah"
+	"ada warna lain?"
+	"show more options"
+	"spesifikasinya apa?"
+	"fiturnya apa saja?"
+	"detail produknya?"
+	"bisa jelaskan lebih lanjut?"
+	"keunggulannya apa?"
+	
+	RULES:
+	- Output MUST be ONLY one of the following:
+	chit_chat
+	general_product_request
+	specific_product_search
+	follow_up
+	
+	- No explanation, no formatting, no JSON. Just the label.`
 
 	messages := []llms.MessageContent{
 		{
@@ -329,23 +334,57 @@ Jawab dengan singkat dan jelas.`
 }
 
 func (c *MistralLLM) GetLastMessageContext(ctx context.Context) (string, error) {
-	sessionId := ctx.Value("session_id")
-	val, err := c.redisClient.Get(ctx, fmt.Sprintf(`history_context:%s`, sessionId))
+
+	sessionId, ok := ctx.Value("session_id").(string)
+	if !ok || sessionId == "" {
+		return "", fmt.Errorf("missing session_id in context")
+	}
+
+	key := fmt.Sprintf("history_context:%s", sessionId)
+
+	// Fetch Redis history
+	raw, err := c.redisClient.Get(ctx, key)
 	if err != nil {
 		return "", err
 	}
 
-	history := []llms.MessageContent{}
-	err = json.Unmarshal([]byte(*val), &history)
-	if err != nil {
+	if raw == nil {
 		return "", nil
 	}
 
-	part := history[len(history)-1].Parts[len(history[len(history)-1].Parts)]
+	var history []llms.MessageContent
 
-	result := contentPartToString(part)
+	if raw != nil {
+		if err := json.Unmarshal([]byte(*raw), &history); err != nil {
+			// corrupt JSON → reset history
+			history = []llms.MessageContent{}
+		}
+	}
 
-	return result, nil
+	// ---- Prevent panic: check length ----
+	if len(history) == 0 {
+		return "", fmt.Errorf("no history available")
+	}
+
+	// If only 1 message exists, return that safely
+	if len(history) == 1 {
+		return extractMessage(history[0]), nil
+	}
+
+	// If 2 or more messages → return last AI message
+	last := history[len(history)-1]
+
+	return extractMessage(last), nil
+}
+
+func extractMessage(msg llms.MessageContent) string {
+	if len(msg.Parts) == 0 {
+		return ""
+	}
+	if text, ok := msg.Parts[0].(llms.TextContent); ok {
+		return text.Text
+	}
+	return ""
 }
 
 func contentPartToString(part llms.ContentPart) string {
