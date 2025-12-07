@@ -1,3 +1,5 @@
+// import { ApiError, ApiRequestOptions, ApiResponse, QueryParams } from "./types";
+
 import { ApiError, ApiRequestOptions, ApiResponse, QueryParams } from "./types";
 
 const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value);
@@ -56,12 +58,18 @@ export class ApiClient {
   private readonly baseUrl: string;
   private readonly getAuthToken?: () => string | null | Promise<string | null>;
 
-  constructor(baseUrl: string, getAuthToken?: () => string | null | Promise<string | null>) {
+  constructor(
+    baseUrl: string,
+    getAuthToken?: () => string | null | Promise<string | null>
+  ) {
     this.baseUrl = baseUrl;
     this.getAuthToken = getAuthToken;
   }
 
-  async request<T>(path: string, options: ApiRequestOptions = {}): Promise<ApiResponse<T>> {
+  async request<T>(
+    path: string,
+    options: ApiRequestOptions = {}
+  ): Promise<ApiResponse<T>> {
     const { method = "GET", headers, json, body, query, ...rest } = options;
     const url = resolveUrl(this.baseUrl, path, query);
 
@@ -69,7 +77,9 @@ export class ApiClient {
     mergedHeaders.set("Accept", "application/json");
 
     if (headers) {
-      new Headers(headers).forEach((value, key) => mergedHeaders.set(key, value));
+      new Headers(headers).forEach((value, key) =>
+        mergedHeaders.set(key, value)
+      );
     }
 
     let requestBody: BodyInit | null = body ?? null;
@@ -124,7 +134,10 @@ export class ApiClient {
     };
   }
 
-  get<T>(path: string, options?: Omit<ApiRequestOptions, "method" | "body" | "json">) {
+  get<T>(
+    path: string,
+    options?: Omit<ApiRequestOptions, "method" | "body" | "json">
+  ) {
     return this.request<T>(path, { ...options, method: "GET" });
   }
 
@@ -140,14 +153,19 @@ export class ApiClient {
     return this.request<T>(path, { ...options, method: "PATCH" });
   }
 
-  delete<T>(path: string, options?: Omit<ApiRequestOptions, "method" | "json">) {
+  delete<T>(
+    path: string,
+    options?: Omit<ApiRequestOptions, "method" | "json">
+  ) {
     return this.request<T>(path, { ...options, method: "DELETE" });
   }
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:9005";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:9005";
 
 export const apiClient = new ApiClient(API_BASE_URL);
 
-export const createApiClient = (getAuthToken?: () => string | null | Promise<string | null>) =>
-  new ApiClient(API_BASE_URL, getAuthToken);
+export const createApiClient = (
+  getAuthToken?: () => string | null | Promise<string | null>
+) => new ApiClient(API_BASE_URL, getAuthToken);
