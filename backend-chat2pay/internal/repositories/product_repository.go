@@ -236,14 +236,16 @@ func (r *productRepository) GetProductEmbedding(ctx context.Context, vector []fl
 
 func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error) {
 	query := `
-		SELECT id, 
-		       product_id,   
-		       1 - (embedding <=> $1) AS similarity
-		FROM product_embedding
-		ORDER BY similarity ASC;
-	`
+        SELECT id, product_id, embedding <=> $1 as cosine_distance
+        FROM product_embedding
+        WHERE embedding <=> $1 < $2  -- Cosine distance threshold
+        ORDER BY cosine_distance
+        LIMIT $3
+    `
 
-	rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector))
+	// For cosine distance, try 0.3 as threshold
+	// Cosine distance: 0 = identical, 1 = orthogonal, 2 = opposite
+	rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector), 0.3, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -255,15 +257,12 @@ func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector 
 		if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Similarity); err != nil {
 			return nil, err
 		}
-		fmt.Println("pe.Similarity --> ", pe.Similarity)
-		if pe.Similarity >= 0.6 {
-			results = append(results, pe)
-		}
+		fmt.Println("Cosine Distance --> ", pe.Similarity)
+		results = append(results, pe)
 	}
 
 	return results, nil
 }
-
 func (r *productRepository) CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error {
 	query := `
 		INSERT INTO product_embedding (
