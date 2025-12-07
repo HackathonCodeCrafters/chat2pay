@@ -27,7 +27,8 @@ func NewMistralLLM(apiKey string, client redis.RedisClient) *MistralLLM {
 	}
 }
 
-func (c *MistralLLM) ChatWithHistory(ctx context.Context, sessionId string, userMessage string) (string, error) {
+func (c *MistralLLM) ChatWithHistory(ctx context.Context, userMessage string) (string, error) {
+	sessionId := ctx.Value("session_id").(string)
 	val, err := c.redisClient.Get(ctx, fmt.Sprintf(`history_context:%s`, sessionId))
 	if err != nil {
 		return "", err
@@ -74,47 +75,56 @@ func (c *MistralLLM) ChatWithHistory(ctx context.Context, sessionId string, user
 func (c *MistralLLM) ClassifyIntent(ctx context.Context, userMessage string) (string, error) {
 	systemPrompt := `
 		You are an Intent Classification AI for a shopping assistant.
-		
-		Your job is to classify the user's latest message into ONE of these intent categories:
+
+		Classify the user's latest message into ONE of these categories:
 		
 		1. chit_chat
-		   - Greeting or casual conversation not related to shopping.
-		   Example: "hi", "how are you", "tell me a joke"
+		- Casual conversation unrelated to shopping.
+		Examples:
+		"hi", "how are you", "where are you from"
 		
 		2. general_product_request
-		   - The user expresses interest in a product but is not specific enough.
-		   Example: "I need a mouse", "I'm looking for headphones", 
-					"recommend a laptop", "I want a new phone"
+		- User asks about a product category WITHOUT specific requirements.
+		- They mention only the PRODUCT TYPE or ask for advice.
+		Examples:
+		"I need a mouse", 
+		"Looking for a keyboard", 
+		"Any recommendation for a laptop?",
+		"Saya ingin cari mouse, ada rekomendasi?"
+		
+		⚠ IMPORTANT:
+		- If the user only says a product name + "cocok / bagus / rekomendasi", treat it as general request.
 		
 		3. specific_product_search
-		   - The user provides enough details such as budget, specification, brand,
-			 use-case, feature request, or preference.
-		   Example:
-		   - "Best wireless mouse under $50"
-		   - "Gaming keyboard with RGB"
-		   - "Headphones for gym"
-		   - "Ergonomic desk chair for back pain"
+		- User provides ANY detail such as:
+		  - Budget (expensive / murah / under 1M)
+		  - Features (wireless, bluetooth, DPI adjustable, silent click)
+		  - Purpose (gaming, design, work, traveling)
+		  - Brand (Logitech, Razer)
+		  - Specs (RGB, rechargeable, ergonomic)
+		Examples:
+		"mouse wireless murah",
+		"best mouse for designer",
+		"wireless keyboard under $50",
+		"ergonomic mouse for wrist pain"
 		
 		4. follow_up
-		   - The user message references a previous answer or continues the context.
-		   Example:
-		   - "yes wireless"
-		   - "cheaper one"
-		   - "any other option?"
-		   - "show me more models"
+		- User message refers to previous discussion.
+		Examples:
+		"yes wireless",
+		"any cheaper?",
+		"show more options"
 		
-		---
-		
-		RESPONSE FORMAT (MUST BE STRING, NO EXTRA TEXT):
-		
-		<one of: chit_chat, general_product_request, specific_product_search, follow_up>
-        example: general_product_request
+		----
 		
 		Rules:
-		- Do NOT explain the classification.
-		- Do NOT include confidence scores.
-		- Do NOT respond as a chatbot.
-		- ONLY return JSON with the detected intent.
+		- MUST return plain text intent (not JSON).
+		- No explanation or extra words.
+		- Response must be exactly one of:
+		  chit_chat
+		  general_product_request
+		  specific_product_search
+		  follow_up
 		`
 
 	messages := []llms.MessageContent{
@@ -146,13 +156,16 @@ func (c *MistralLLM) ClassifyIntent(ctx context.Context, userMessage string) (st
 	return result, nil
 }
 
-func (c *MistralLLM) NewConnection(ctx context.Context, sessionId string) error {
-
+func (c *MistralLLM) NewConnection(ctx context.Context) error {
+	sessionId := ctx.Value("session_id").(string)
 	b, _ := json.Marshal([]llms.MessageContent{
 		{
 			Role: llms.ChatMessageTypeSystem,
 			Parts: []llms.ContentPart{
-				llms.TextPart("You are a product shopping assistant. Help the user with product recommendations."),
+				llms.TextPart("" +
+					"You are a product shopping assistant. " +
+					"Help the user choose their product and give recommendations according to their needs!" +
+					"speak ONLY native indonesian"),
 			},
 		},
 	})
@@ -219,9 +232,9 @@ func (c *MistralLLM) Chat(ctx context.Context, userMessage string) (string, erro
 	return result, nil
 }
 
-func (c *MistralLLM) GetLastMessageContext(ctx context.Context, sessionID string) (string, error) {
-
-	val, err := c.redisClient.Get(ctx, fmt.Sprintf(`history_context:%s`, sessionID))
+func (c *MistralLLM) GetLastMessageContext(ctx context.Context) (string, error) {
+	sessionId := ctx.Value("session_id")
+	val, err := c.redisClient.Get(ctx, fmt.Sprintf(`history_context:%s`, sessionId))
 	if err != nil {
 		return "", err
 	}
@@ -236,7 +249,6 @@ func (c *MistralLLM) GetLastMessageContext(ctx context.Context, sessionID string
 
 	result := contentPartToString(part)
 
-	fmt.Println("result --> ", result)
 	return result, nil
 }
 
