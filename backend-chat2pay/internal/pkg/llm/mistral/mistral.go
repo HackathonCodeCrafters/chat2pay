@@ -19,7 +19,7 @@ type MistralLLM struct {
 func NewMistralLLM(apiKey string, client redis.RedisClient) *MistralLLM {
 	mistral, err := mistral.New(
 		mistral.WithAPIKey(apiKey),
-		//mistral.WithModel("ministral-14b-latest"),
+		mistral.WithModel("ministral-14b-latest"),
 	)
 	if err != nil {
 		panic(err)

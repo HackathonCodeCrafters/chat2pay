@@ -235,17 +235,28 @@ func (r *productRepository) GetProductEmbedding(ctx context.Context, vector []fl
 }
 
 func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error) {
-	query := `
-        SELECT id, product_id, embedding <=> $1 as cosine_distance
-        FROM product_embedding
-        WHERE embedding <=> $1 < $2  -- Cosine distance threshold
-        ORDER BY cosine_distance
+	embeddingQuery := `
+        SELECT 
+            pe.id,
+            pe.product_id,
+            1 - (pe.embedding <=> $1) as similarity_score  -- Convert distance to similarity
+        FROM product_embedding pe
+        JOIN product p ON pe.product_id = p.id
+        WHERE p.status = 'active'::public.product_status_enu
+        AND p.stock > 0
+        AND 1 - (pe.embedding <=> $1) > $2  -- Minimum similarity threshold (0.3 = 70% similarity)
+        ORDER BY similarity_score DESC
         LIMIT $3
     `
 
-	// For cosine distance, try 0.3 as threshold
-	// Cosine distance: 0 = identical, 1 = orthogonal, 2 = opposite
-	rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector), 0.3, 10)
+	// Similarity threshold: 0.3 means we want at least 70% similarity
+	// 1 - (cosine distance) = similarity
+	// Example: distance 0.3 → similarity 0.7 (70%)
+	rows, err := r.DB.QueryContext(ctx, embeddingQuery,
+		pgvector.NewVector(vector),
+		0.3, // Minimum 70% similarity
+		10,
+	)
 	if err != nil {
 		return nil, err
 	}
