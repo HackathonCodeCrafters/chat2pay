@@ -1,10 +1,6 @@
 package entities
 
-import (
-	"database/sql/driver"
-	"gorm.io/gorm"
-	"time"
-)
+import "time"
 
 type MerchantUserRole string
 type MerchantUserStatus string
@@ -19,33 +15,14 @@ const (
 )
 
 type MerchantUser struct {
-	gorm.Model
-	ID           string             `gorm:"primaryKey;autoIncrement" json:"id"`
-	MerchantID   string             `gorm:"not null;index:idx_merchant_users_merchant_id;uniqueIndex:uq_merchant_users_merchant_email,priority:1"`
-	Name         string             `gorm:"type:varchar(150);not null"`
-	Email        string             `gorm:"type:varchar(150);not null;uniqueIndex:uq_merchant_users_merchant_email,priority:2"`
-	PasswordHash string             `gorm:"type:text;not null"`
-	Role         MerchantUserRole   `gorm:"type:merchant_user_role;not null;default:'staff'"`
-	Status       MerchantUserStatus `gorm:"type:merchant_user_status;not null;default:'active'"`
-	CreatedAt    time.Time          `gorm:"autoCreateTime"`
-	UpdatedAt    time.Time          `gorm:"autoUpdateTime"`
-	Merchant     *Merchant          `gorm:"foreignKey:MerchantID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-}
-
-func (r *MerchantUserRole) Scan(value interface{}) error {
-	*r = MerchantUserRole(value.([]byte))
-	return nil
-}
-
-func (r MerchantUserRole) Value() (driver.Value, error) {
-	return string(r), nil
-}
-
-func (s *MerchantUserStatus) Scan(value interface{}) error {
-	*s = MerchantUserStatus(value.([]byte))
-	return nil
-}
-
-func (s MerchantUserStatus) Value() (driver.Value, error) {
-	return string(s), nil
+	ID           string    `db:"id" json:"id"`
+	MerchantID   string    `db:"merchant_id" json:"merchant_id"`
+	Name         string    `db:"name" json:"name"`
+	Email        string    `db:"email" json:"email"`
+	PasswordHash string    `db:"password_hash" json:"-"`
+	Role         string    `db:"role" json:"role"`
+	Status       string    `db:"status" json:"status"`
+	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+	Merchant     *Merchant `db:"-" json:"merchant,omitempty"`
 }

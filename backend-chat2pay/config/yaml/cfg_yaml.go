@@ -12,6 +12,7 @@ type Config struct {
 	JWT    JWT    `yaml:"jwt" json:"jwt"`
 	Logger Logger `yaml:"logger" json:"logger"`
 	LLM    LLM    `yaml:"llm" json:"llm"`
+	RajaOngkir RajaOngkir `yaml:"rajaongkir" json:"rajaongkir"`
 }
 
 type App struct {
@@ -62,6 +63,10 @@ type Gemini struct {
 }
 
 type Mistral struct {
+	APIKey string `yaml:"api_key" json:"api_key"`
+}
+
+type RajaOngkir struct {
 	APIKey string `yaml:"api_key" json:"api_key"`
 }
 

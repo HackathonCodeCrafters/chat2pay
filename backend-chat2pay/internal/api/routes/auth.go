@@ -13,12 +13,16 @@ func AuthRouter(
 	auth := router.Group("/auth")
 
 	// Merchant auth
-	merchant := auth.Group("/merchant")
-	merchant.Post("/register", merchantAuthHandler.Register)
-	merchant.Post("/login", merchantAuthHandler.Login)
+	if merchantAuthHandler != nil {
+		merchant := auth.Group("/merchant")
+		merchant.Post("/register", merchantAuthHandler.Register)
+		merchant.Post("/login", merchantAuthHandler.Login)
+	}
 
 	// Customer auth
-	customer := auth.Group("/customer")
-	customer.Post("/register", customerAuthHandler.Register)
-	customer.Post("/login", customerAuthHandler.Login)
+	if customerAuthHandler != nil {
+		customer := auth.Group("/customer")
+		customer.Post("/register", customerAuthHandler.Register)
+		customer.Post("/login", customerAuthHandler.Login)
+	}
 }

@@ -98,7 +98,7 @@ func (s *merchantAuthService) Register(ctx context.Context, req *dto.MerchantReg
 	}
 
 	log.Info("generating token")
-	token, err := s.authMdwr.GenerateToken(createdUser.ID, createdUser.Email, "merchant")
+	token, err := s.authMdwr.GenerateTokenWithMerchant(createdUser.ID, createdMerchant.ID, createdUser.Email, "merchant")
 	if err != nil {
 		log.Error(fmt.Sprintf("error generating token: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to generate token"))
@@ -140,7 +140,7 @@ func (s *merchantAuthService) Login(ctx context.Context, req *dto.MerchantLoginR
 	}
 
 	log.Info("generating token")
-	token, err := s.authMdwr.GenerateToken(merchantUser.ID, merchantUser.Email, "merchant")
+	token, err := s.authMdwr.GenerateTokenWithMerchant(merchantUser.ID, merchantUser.MerchantID, merchantUser.Email, "merchant")
 	if err != nil {
 		log.Error(fmt.Sprintf("error generating token: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to generate token"))

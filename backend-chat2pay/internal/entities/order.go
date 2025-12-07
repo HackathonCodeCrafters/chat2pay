@@ -3,20 +3,56 @@ package entities
 import "time"
 
 type Order struct {
-	ID             string      `gorm:"primaryKey;autoIncrement" json:"id"`
-	OrderNumber    string      `gorm:"type:varchar(50);not null;uniqueIndex:uq_orders_order_number" json:"order_number"`
-	CustomerID     string      `gorm:"not null;index:idx_orders_customer_id" json:"customer_id"`
-	MerchantID     string      `gorm:"not null;index:idx_orders_merchant_id" json:"merchant_id"`
-	OutletID       *string     `gorm:"index:idx_orders_outlet_id" json:"outlet_id,omitempty"`
-	Status         string      `gorm:"type:order_status;not null;default:'pending';index:idx_orders_status" json:"status"`
-	SubtotalAmount float64     `gorm:"type:decimal(15,2);not null;default:0" json:"subtotal_amount"`
-	ShippingAmount float64     `gorm:"type:decimal(15,2);not null;default:0" json:"shipping_amount"`
-	DiscountAmount float64     `gorm:"type:decimal(15,2);not null;default:0" json:"discount_amount"`
-	TotalAmount    float64     `gorm:"type:decimal(15,2);not null;default:0" json:"total_amount"`
-	CreatedAt      time.Time   `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt      time.Time   `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
-	Customer       *Customer   `gorm:"foreignKey:CustomerID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	Merchant       *Merchant   `gorm:"foreignKey:MerchantID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	Outlet         *Outlet     `gorm:"foreignKey:OutletID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-	Items          []OrderItem `gorm:"foreignKey:OrderID"`
+	ID                  string       `json:"id" db:"id"`
+	CustomerID          string       `json:"customer_id" db:"customer_id"`
+	MerchantID          string       `json:"merchant_id" db:"merchant_id"`
+	Status              string       `json:"status" db:"status"`
+	Subtotal            float64      `json:"subtotal" db:"subtotal"`
+	ShippingCost        float64      `json:"shipping_cost" db:"shipping_cost"`
+	Total               float64      `json:"total" db:"total"`
+	Courier             *string      `json:"courier,omitempty" db:"courier"`
+	CourierService      *string      `json:"courier_service,omitempty" db:"courier_service"`
+	ShippingEtd         *string      `json:"shipping_etd,omitempty" db:"shipping_etd"`
+	TrackingNumber      *string      `json:"tracking_number,omitempty" db:"tracking_number"`
+	ShippingAddress     *string      `json:"shipping_address,omitempty" db:"shipping_address"`
+	ShippingCity        *string      `json:"shipping_city,omitempty" db:"shipping_city"`
+	ShippingProvince    *string      `json:"shipping_province,omitempty" db:"shipping_province"`
+	ShippingPostalCode  *string      `json:"shipping_postal_code,omitempty" db:"shipping_postal_code"`
+	PaymentMethod       *string      `json:"payment_method,omitempty" db:"payment_method"`
+	PaymentStatus       string       `json:"payment_status" db:"payment_status"`
+	PaymentToken        *string      `json:"payment_token,omitempty" db:"payment_token"`
+	PaymentURL          *string      `json:"payment_url,omitempty" db:"payment_url"`
+	PaidAt              *time.Time   `json:"paid_at,omitempty" db:"paid_at"`
+	Notes               *string      `json:"notes,omitempty" db:"notes"`
+	CreatedAt           time.Time    `json:"created_at" db:"created_at"`
+	UpdatedAt           time.Time    `json:"updated_at" db:"updated_at"`
+	Items               []OrderItem  `json:"items,omitempty" db:"-"`
+	Customer            *Customer    `json:"customer,omitempty" db:"-"`
+	Merchant            *Merchant    `json:"merchant,omitempty" db:"-"`
 }
+
+type OrderItem struct {
+	ID           string    `json:"id" db:"id"`
+	OrderID      string    `json:"order_id" db:"order_id"`
+	ProductID    string    `json:"product_id" db:"product_id"`
+	ProductName  string    `json:"product_name" db:"product_name"`
+	ProductPrice float64   `json:"product_price" db:"product_price"`
+	Quantity     int       `json:"quantity" db:"quantity"`
+	Subtotal     float64   `json:"subtotal" db:"subtotal"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	Product      *Product  `json:"product,omitempty" db:"-"`
+}
+
+const (
+	OrderStatusPending    = "pending"
+	OrderStatusPaid       = "paid"
+	OrderStatusProcessing = "processing"
+	OrderStatusShipped    = "shipped"
+	OrderStatusDelivered  = "delivered"
+	OrderStatusCancelled  = "cancelled"
+
+	PaymentStatusPending = "pending"
+	PaymentStatusPaid    = "paid"
+	PaymentStatusFailed  = "failed"
+	PaymentStatusExpired = "expired"
+)

@@ -6,22 +6,27 @@ import (
 
 type (
 	Product struct {
-		ID          string           `json:"id"`
-		MerchantID  string           `json:"merchant_id"`
-		OutletID    *string          `json:"outlet_id,omitempty"`
-		CategoryID  *string          `json:"category_id,omitempty"`
-		Name        string           `json:"name"`
-		Description *string          `json:"description,omitempty"`
-		SKU         *string          `json:"sku,omitempty"`
-		Price       float64          `json:"price"`
-		Stock       int              `json:"stock"`
-		Status      string           `json:"status"`
-		CreatedAt   time.Time        `json:"created_at"`
-		UpdatedAt   time.Time        `json:"updated_at"`
-		Merchant    *Merchant        `json:"merchant"`
-		Outlet      *Outlet          `json:"outlet"`
-		Category    *ProductCategory `json:"category"`
-		Images      []ProductImage   `json:"images"`
+		ID          string           `json:"id" db:"id"`
+		MerchantID  string           `json:"merchant_id" db:"merchant_id"`
+		OutletID    *string          `json:"outlet_id,omitempty" db:"outlet_id"`
+		CategoryID  *string          `json:"category_id,omitempty" db:"category_id"`
+		Name        string           `json:"name" db:"name"`
+		Description *string          `json:"description,omitempty" db:"description"`
+		SKU         *string          `json:"sku,omitempty" db:"sku"`
+		Price       float64          `json:"price" db:"price"`
+		Stock       int              `json:"stock" db:"stock"`
+		Status      string           `json:"status" db:"status"`
+		Image       *string          `json:"image,omitempty" db:"image"`
+		Weight      int              `json:"weight" db:"weight"`
+		Length      int              `json:"length" db:"length"`
+		Width       int              `json:"width" db:"width"`
+		Height      int              `json:"height" db:"height"`
+		CreatedAt   time.Time        `json:"created_at" db:"created_at"`
+		UpdatedAt   time.Time        `json:"updated_at" db:"updated_at"`
+		Merchant    *Merchant        `json:"merchant" db:"-"`
+		Outlet      *Outlet          `json:"outlet" db:"-"`
+		Category    *ProductCategory `json:"category" db:"-"`
+		Images      []ProductImage   `json:"images" db:"-"`
 	}
 
 	ProductEmbedding struct {

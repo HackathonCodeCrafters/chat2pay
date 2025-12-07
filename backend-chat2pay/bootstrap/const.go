@@ -13,11 +13,27 @@ const (
 	AuthCustomerService = "auth_customer.service"
 	AuthMerchantService = "auth_merchant.service"
 
-	ProductHandlerName  = "product.handler"
-	CustomerHandlerName = "customer.handler"
+	ProductHandlerName      = "product.handler"
+	CustomerHandlerName     = "customer.handler"
+	CustomerAuthHandlerName = "customer_auth.handler"
 
-	ProductRepositoryName  = "product.repository"
-	MerchantRepositoryName = "merchant.repository"
+	AuthMiddlewareName = "auth.middleware"
+
+	ProductRepositoryName      = "product.repository"
+	MerchantRepositoryName     = "merchant.repository"
+	CustomerRepositoryName     = "customer.repository"
+	MerchantUserRepositoryName = "merchant_user.repository"
+
+	MerchantAuthHandlerName = "merchant_auth.handler"
+	ShippingHandlerName     = "shipping.handler"
+	OrderHandlerName        = "order.handler"
+
+	OrderServiceName        = "order.service"
+	OrderRepositoryName     = "order.repository"
+	ChatMessageRepositoryName = "chat_message.repository"
+	ChatHandlerName         = "chat.handler"
+
+	RajaOngkirName = "rajaongkir.package"
 
 	LLMPackageName = "llm.package"
 )

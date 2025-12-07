@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"time"
 
-	"gorm.io/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type CustomerRepository interface {
@@ -22,10 +22,10 @@ type CustomerRepository interface {
 }
 
 type customerRepository struct {
-	db *gorm.DB
+	db *sqlx.DB
 }
 
-func NewCustomerRepo(db *gorm.DB) CustomerRepository {
+func NewCustomerRepo(db *sqlx.DB) CustomerRepository {
 	return &customerRepository{
 		db: db,
 	}
@@ -39,15 +39,16 @@ func (r *customerRepository) Create(ctx context.Context, customer *entities.Cust
 	`
 
 	now := time.Now()
-	err := r.db.WithContext(ctx).Raw(query,
+	row := r.db.QueryRowxContext(ctx, query,
 		customer.Name,
 		customer.Email,
 		customer.Phone,
 		customer.PasswordHash,
 		now,
 		now,
-	).Scan(customer).Error
+	)
 
+	err := row.Scan(&customer.ID, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -56,21 +57,25 @@ func (r *customerRepository) Create(ctx context.Context, customer *entities.Cust
 }
 
 func (r *customerRepository) FindAll(ctx context.Context, limit, offset int) ([]entities.Customer, error) {
+	var customers []entities.Customer
+
+	if limit > 0 {
+		query := `
+			SELECT id, name, email, phone, password_hash, created_at, updated_at
+			FROM customers
+			ORDER BY created_at DESC
+			LIMIT $1 OFFSET $2
+		`
+		err := r.db.SelectContext(ctx, &customers, query, limit, offset)
+		return customers, err
+	}
+
 	query := `
 		SELECT id, name, email, phone, password_hash, created_at, updated_at
 		FROM customers
 		ORDER BY created_at DESC
 	`
-
-	if limit > 0 {
-		query += ` LIMIT $1 OFFSET $2`
-		var customers []entities.Customer
-		err := r.db.WithContext(ctx).Raw(query, limit, offset).Scan(&customers).Error
-		return customers, err
-	}
-
-	var customers []entities.Customer
-	err := r.db.WithContext(ctx).Raw(query).Scan(&customers).Error
+	err := r.db.SelectContext(ctx, &customers, query)
 	return customers, err
 }
 
@@ -82,17 +87,12 @@ func (r *customerRepository) FindOneById(ctx context.Context, id string) (*entit
 	`
 
 	var customer entities.Customer
-	err := r.db.WithContext(ctx).Raw(query, id).Scan(&customer).Error
+	err := r.db.GetContext(ctx, &customer, query, id)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound || err == sql.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
-	}
-
-	// Check if record was found
-	if customer.ID == "" {
-		return nil, nil
 	}
 
 	return &customer, nil
@@ -106,17 +106,12 @@ func (r *customerRepository) FindOneByEmail(ctx context.Context, email string) (
 	`
 
 	var customer entities.Customer
-	err := r.db.WithContext(ctx).Raw(query, email).Scan(&customer).Error
+	err := r.db.GetContext(ctx, &customer, query, email)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound || err == sql.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
-	}
-
-	// Check if record was found
-	if customer.ID == "" {
-		return nil, nil
 	}
 
 	return &customer, nil
@@ -130,17 +125,12 @@ func (r *customerRepository) FindOneByPhone(ctx context.Context, phone string) (
 	`
 
 	var customer entities.Customer
-	err := r.db.WithContext(ctx).Raw(query, phone).Scan(&customer).Error
+	err := r.db.GetContext(ctx, &customer, query, phone)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound || err == sql.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
-	}
-
-	// Check if record was found
-	if customer.ID == "" {
-		return nil, nil
 	}
 
 	return &customer, nil
@@ -155,14 +145,15 @@ func (r *customerRepository) Update(ctx context.Context, customer *entities.Cust
 	`
 
 	now := time.Now()
-	err := r.db.WithContext(ctx).Raw(query,
+	row := r.db.QueryRowxContext(ctx, query,
 		customer.Name,
 		customer.Email,
 		customer.Phone,
 		now,
 		customer.ID,
-	).Scan(customer).Error
+	)
 
+	err := row.StructScan(customer)
 	if err != nil {
 		return nil, err
 	}
@@ -172,18 +163,20 @@ func (r *customerRepository) Update(ctx context.Context, customer *entities.Cust
 
 func (r *customerRepository) UpdatePassword(ctx context.Context, id string, passwordHash string) error {
 	query := `UPDATE customers SET password_hash = $1, updated_at = $2 WHERE id = $3`
-	return r.db.WithContext(ctx).Exec(query, passwordHash, time.Now(), id).Error
+	_, err := r.db.ExecContext(ctx, query, passwordHash, time.Now(), id)
+	return err
 }
 
 func (r *customerRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM customers WHERE id = $1`
-	return r.db.WithContext(ctx).Exec(query, id).Error
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
 }
 
 func (r *customerRepository) Count(ctx context.Context) (int64, error) {
 	query := `SELECT COUNT(*) FROM customers`
 
 	var count int64
-	err := r.db.WithContext(ctx).Raw(query).Scan(&count).Error
+	err := r.db.GetContext(ctx, &count, query)
 	return count, err
 }

@@ -2,19 +2,26 @@ package routes
 
 import (
 	"chat2pay/internal/api/handlers"
-	"chat2pay/internal/middlewares/jwt"
+	"chat2pay/internal/api/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 
-func OrderRouter(router fiber.Router, handler *handlers.OrderHandler, authMdwr jwt.AuthMiddleware) {
+func OrderRouter(router fiber.Router, handler *handlers.OrderHandler, jwtSecret string) {
 	orders := router.Group("/orders")
 
-	// All order routes require authentication
-	orders.Post("/", jwt.JWTProtected(authMdwr), handler.Create)
-	orders.Get("/", jwt.JWTProtected(authMdwr), handler.GetAll)
-	orders.Get("/:id", jwt.JWTProtected(authMdwr), handler.GetById)
+	customerAuth := middleware.CustomerAuthMiddleware(jwtSecret)
+	merchantAuth := middleware.MerchantAuthMiddleware(jwtSecret)
 
-	// Only merchant can update status and delete
-	orders.Patch("/:id/status", jwt.JWTProtected(authMdwr), jwt.RequireRole("merchant"), handler.UpdateStatus)
-	orders.Delete("/:id", jwt.JWTProtected(authMdwr), jwt.RequireRole("merchant"), handler.Delete)
+	// Static routes MUST come before parameterized routes
+	// Customer routes
+	orders.Post("/", customerAuth, handler.CreateOrder)
+	orders.Get("/customer", customerAuth, handler.GetCustomerOrders)
+
+	// Merchant routes
+	orders.Get("/merchant", merchantAuth, handler.GetMerchantOrders)
+	orders.Get("/merchant/:id", merchantAuth, handler.GetOrder)
+	orders.Patch("/:id/status", merchantAuth, handler.UpdateOrderStatus)
+
+	// Parameterized routes LAST
+	orders.Get("/:id", customerAuth, handler.GetOrder)
 }

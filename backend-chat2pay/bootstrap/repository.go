@@ -20,5 +20,29 @@ func NewRepository() *[]di.Def {
 				return repositories.NewMerchantRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
 			},
 		},
+		{
+			Name: CustomerRepositoryName,
+			Build: func(ctn di.Container) (interface{}, error) {
+				return repositories.NewCustomerRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
+			},
+		},
+		{
+			Name: MerchantUserRepositoryName,
+			Build: func(ctn di.Container) (interface{}, error) {
+				return repositories.NewMerchantUserRepo(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
+			},
+		},
+		{
+			Name: OrderRepositoryName,
+			Build: func(ctn di.Container) (interface{}, error) {
+				return repositories.NewOrderRepository(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
+			},
+		},
+		{
+			Name: ChatMessageRepositoryName,
+			Build: func(ctn di.Container) (interface{}, error) {
+				return repositories.NewChatMessageRepository(ctn.Get(DatabaseAdapter).(*sqlx.DB)), nil
+			},
+		},
 	}
 }
