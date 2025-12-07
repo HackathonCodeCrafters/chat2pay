@@ -79,6 +79,5 @@ class ChatWebSocket {
 export const chatWebSocket = new ChatWebSocket();
 
 export function getWebSocketBaseUrl(): string {
-  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:9005";
-  return apiUrl.replace(/^http/, "ws").replace(/\/api\/?$/, "");
+  return process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:9005";
 }

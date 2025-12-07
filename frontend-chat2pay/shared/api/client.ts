@@ -161,8 +161,7 @@ export class ApiClient {
   }
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:9005";
+const API_BASE_URL = "/api/backend";
 
 export const apiClient = new ApiClient(API_BASE_URL);
 
