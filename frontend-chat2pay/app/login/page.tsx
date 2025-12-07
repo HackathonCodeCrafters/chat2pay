@@ -1,184 +1,96 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-import { ArrowLeftCircle, Lock, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { Sparkles, ArrowLeft } from "lucide-react";
+import { LoginForm } from "@/features/auth/components";
 
-import { Button } from "@/components/ui/button";
-import { ApiError, apiClient } from "@/lib/api";
-
-type LoginPayload = {
-  email: string;
-  password: string;
-};
-
-type Status =
-  | { type: "idle" }
-  | { type: "loading" }
-  | { type: "success"; message: string }
-  | { type: "error"; message: string };
-
-const inputClass =
-  "w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm shadow-sm outline-none ring-0 transition focus:border-zinc-800 focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-100 dark:focus:ring-zinc-100/10";
-
-export default function LoginMerchantPage() {
-  const [payload, setPayload] = useState<LoginPayload>({
-    email: "",
-    password: "",
-  });
-  const [status, setStatus] = useState<Status>({ type: "idle" });
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatus({ type: "loading" });
-
-    try {
-      await apiClient.post("/merchants/login", {
-        json: {
-          email: payload.email,
-          password: payload.password,
-        },
-      });
-
-      setStatus({
-        type: "success",
-        message: "Login berhasil. Mengarahkan ke dashboard...",
-      });
-    } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.payload && typeof error.payload === "object"
-            ? (error.payload as { message?: string }).message ??
-              "Login gagal, periksa kredensial Anda."
-            : "Login gagal, periksa kredensial Anda."
-          : "Login gagal, periksa kredensial Anda.";
-
-      setStatus({ type: "error", message });
-    }
-  };
-
+export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50 text-zinc-900 dark:from-black dark:via-zinc-900 dark:to-amber-950/20 dark:text-zinc-100">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-12 px-6 py-12 lg:flex-row lg:items-center lg:gap-16">
-        <div className="flex-1 space-y-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
-          >
-            <ArrowLeftCircle className="h-4 w-4" />
-            Kembali ke beranda
-          </Link>
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white shadow-lg ring-1 ring-zinc-900/10 dark:bg-white dark:text-zinc-950">
-              <Lock className="h-4 w-4" />
-              Login Merchant
+    <div className="min-h-screen flex relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-500/5 rounded-full blur-3xl" />
+      </div>
+
+      {/* Left side - Branding */}
+      <div className="hidden lg:flex flex-1 flex-col justify-between p-12 relative">
+        <Link href="/" className="flex items-center gap-3 group w-fit">
+          <ArrowLeft className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Kembali</span>
+        </Link>
+
+        <div>
+          <div className="mb-8">
+            <div className="bg-white rounded-2xl px-6 py-4 inline-block">
+              <Image 
+                src="/logo-chat2pay.png" 
+                alt="Chat2Pay" 
+                width={200} 
+                height={65}
+                className="h-16 w-auto"
+              />
             </div>
-            <h1 className="text-4xl font-semibold leading-tight">
-              Masuk ke dashboard pembayaran Anda
-            </h1>
-            <p className="max-w-2xl text-base text-zinc-600 dark:text-zinc-300">
-              Kelola pembayaran, pantau transaksi, dan atur channel chat dari
-              satu tempat. Gunakan email bisnis yang sudah terdaftar.
-            </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              "Realtime insight transaksi",
-              "Pengaturan webhook yang mudah",
-              "Sesi aman dengan proteksi token",
-              "Dukungan 24/7 lewat chat",
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 rounded-xl border border-zinc-200/80 bg-white/70 px-4 py-3 text-sm font-medium shadow-sm backdrop-blur dark:border-zinc-800/80 dark:bg-zinc-900/70"
-              >
-                <Sparkles className="h-5 w-5 text-amber-500" />
-                <span>{item}</span>
-              </div>
-            ))}
+          <p className="text-xl text-muted-foreground max-w-md leading-relaxed">
+            Temukan produk impian Anda dengan bantuan AI. Cukup ceritakan apa yang Anda cari, 
+            dan kami akan membantu menemukannya.
+          </p>
+          
+          <div className="mt-12 flex items-center gap-6">
+            <div className="glass-card rounded-xl p-4">
+              <p className="text-3xl font-bold gradient-text">10K+</p>
+              <p className="text-xs text-muted-foreground">Pengguna Aktif</p>
+            </div>
+            <div className="glass-card rounded-xl p-4">
+              <p className="text-3xl font-bold gradient-text">50K+</p>
+              <p className="text-xs text-muted-foreground">Produk</p>
+            </div>
+            <div className="glass-card rounded-xl p-4">
+              <p className="text-3xl font-bold gradient-text">99%</p>
+              <p className="text-xs text-muted-foreground">Kepuasan</p>
+            </div>
           </div>
         </div>
 
-        <div className="flex-1">
-          <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-6 shadow-2xl backdrop-blur dark:border-zinc-800/80 dark:bg-zinc-900/80 sm:p-8">
-            <div className="mb-6 space-y-1">
-              <p className="text-sm font-semibold text-amber-600 dark:text-amber-300">
-                Akses akun
-              </p>
-              <h2 className="text-2xl font-semibold">Masuk sebagai merchant</h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                Masukkan kredensial yang Anda gunakan saat mendaftar.
+        <p className="text-sm text-muted-foreground">
+          &copy; 2024 Chat2Pay by Code Crafters
+        </p>
+      </div>
+
+      {/* Right side - Form */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+        {/* Mobile logo */}
+        <Link href="/" className="mb-8 lg:hidden">
+          <div className="bg-white rounded-xl px-4 py-2">
+            <Image 
+              src="/logo-chat2pay.png" 
+              alt="Chat2Pay" 
+              width={160} 
+              height={52}
+              className="h-12 w-auto"
+            />
+          </div>
+        </Link>
+
+        {/* Login Card */}
+        <div className="w-full max-w-md">
+          <div className="glass-card rounded-2xl p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-2">Selamat Datang! 👋</h2>
+              <p className="text-sm text-muted-foreground">
+                Masuk ke akun Anda untuk melanjutkan
               </p>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                  Email bisnis
-                </label>
-                <input
-                  required
-                  type="email"
-                  className={inputClass}
-                  placeholder="ops@bisnis.co.id"
-                  value={payload.email}
-                  onChange={(event) =>
-                    setPayload((prev) => ({ ...prev, email: event.target.value }))
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                  Password
-                </label>
-                <input
-                  required
-                  type="password"
-                  className={inputClass}
-                  placeholder="Masukkan password"
-                  value={payload.password}
-                  onChange={(event) =>
-                    setPayload((prev) => ({
-                      ...prev,
-                      password: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              {status.type === "error" ? (
-                <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
-                  {status.message}
-                </div>
-              ) : null}
-
-              {status.type === "success" ? (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-100">
-                  {status.message}
-                </div>
-              ) : null}
-
-              <Button
-                type="submit"
-                className="w-full text-base font-semibold"
-                disabled={status.type === "loading"}
-              >
-                {status.type === "loading" ? "Memproses..." : "Masuk"}
-              </Button>
-            </form>
-
-            <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-              Belum punya akun?{" "}
-              <Link
-                href="/register"
-                className="font-semibold text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
-              >
-                Daftar sekarang
-              </Link>
-              .
-            </p>
+            <LoginForm />
           </div>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground lg:hidden">
+            &copy; 2024 Chat2Pay by Code Crafters
+          </p>
         </div>
       </div>
     </div>
