@@ -423,7 +423,8 @@ docker-compose up -d
 - Token expires in 24 hours, re-login if expired
 
 ### Migration Not Running
-- Migrations auto-run on startup
+- Migrations need to run manualy
+- you can run it using `make migration up`
 - Check `migrations/` folder for SQL files
 - Make sure database connection success in logs
 

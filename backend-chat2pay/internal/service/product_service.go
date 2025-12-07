@@ -5,8 +5,9 @@ import (
 	"chat2pay/internal/api/dto"
 	"chat2pay/internal/api/presenter"
 	"chat2pay/internal/entities"
-	"chat2pay/internal/pkg/llm/mistral"
+	"chat2pay/internal/pkg/llm"
 	"chat2pay/internal/pkg/logger"
+	"chat2pay/internal/pkg/redis"
 	"chat2pay/internal/repositories"
 	"context"
 	"errors"
@@ -25,20 +26,23 @@ type ProductService interface {
 type productService struct {
 	productRepo  repositories.ProductRepository
 	merchantRepo repositories.MerchantRepository
-	llm          *mistral.MistralLLM
+	llm          llm.LLM
+	redisClient  redis.RedisClient
 	cfg          *yaml.Config
 }
 
 func NewProductService(
 	productRepo repositories.ProductRepository,
 	merchantRepo repositories.MerchantRepository,
-	llm *mistral.MistralLLM,
+	llm llm.LLM,
+	redisClient redis.RedisClient,
 	cfg *yaml.Config,
 ) ProductService {
 	return &productService{
 		productRepo:  productRepo,
 		merchantRepo: merchantRepo,
 		llm:          llm,
+		redisClient:  redisClient,
 		cfg:          cfg,
 	}
 }
@@ -48,18 +52,6 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 		response = presenter.Response{}
 		log      = logger.NewLog("product_service_create", s.cfg.Logger.Enable)
 	)
-
-	log.Info("checking if merchant exists")
-	//merchant, err := s.merchantRepo.FindOneById(ctx, req.MerchantID)
-	//if err != nil {
-	//	log.Error(fmt.Sprintf("error checking merchant: %v", err))
-	//	return response.WithCode(500).WithError(errors.New("something went wrong"))
-	//}
-	//
-	//if merchant == nil {
-	//	log.Warn("merchant not found")
-	//	return response.WithCode(404).WithError(errors.New("merchant not found"))
-	//}
 
 	product := &entities.Product{
 		MerchantID:  req.MerchantID,
@@ -81,7 +73,6 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 	log.Info("creating product")
 	created, err := s.productRepo.Create(ctx, product)
 	if err != nil {
-		fmt.Println("err -> ", err)
 		log.Error(fmt.Sprintf("error creating product: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to create product"))
 	}
@@ -101,7 +92,6 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 	})
 
 	if err != nil {
-		fmt.Println("err -> ", err)
 		log.Error(fmt.Sprintf("error creating product: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to create product"))
 	}
@@ -121,22 +111,22 @@ func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *p
 		return response.WithCode(500).WithError(errors.New("failed classify intent"))
 	}
 
-	switch classify.Intent {
+	switch classify {
 	case "chit_chat":
 
-		content, err := s.llm.Chat(ctx, req.Prompt)
+		answer, err := s.llm.ChatWithHistory(ctx, req.Prompt)
 		if err != nil {
-			return response.WithCode(500).WithError(errors.New("failed classify intent"))
+			return response.WithCode(500).WithError(errors.New("failed get product"))
 		}
 
-		data := dto.ToLLM(nil, content)
+		data := dto.ToLLM(nil, answer)
 		return response.WithCode(200).WithData(data)
 
 	case "general_product_request":
 		prompt := fmt.Sprintf("User message: '%s'. Ask a clarifying question.", req.Prompt)
-		answer, err := s.llm.Chat(ctx, prompt)
+		answer, err := s.llm.ChatWithHistory(ctx, prompt)
 		if err != nil {
-			return response.WithCode(500).WithError(errors.New("failed classify intent"))
+			return response.WithCode(500).WithError(errors.New("failed get product"))
 		}
 
 		data := dto.ToLLM(nil, answer)
@@ -169,16 +159,25 @@ func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *p
 			return response.WithCode(500).WithError(errors.New("failed get product"))
 		}
 
-		data := dto.ToLLM(&product, "here's your requested product")
-		return response.WithCode(201).WithData(data)
+		data := dto.ToLLM(&product, "Berikut daftar produk yang mungkin relevan:")
+		return response.WithCode(200).WithData(data)
 
-		//case "follow_up":
-		//	// Combine last product result + embedding
-		//	prev := s.session.GetLastMessage(ctx)
-		//	embedding, _ := s.llm.EmbedQuery(ctx, prev+" "+message)
-		//	productIDs, _ := s.productRepo.SearchClosestProducts(ctx, embedding, 5)
-		//	products, _ := s.productRepo.FindProductsByIDs(ctx, productIDs)
-		//	return presenter.NewData(products)
+	case "follow_up":
+
+		lastMsg, err := s.llm.GetLastMessageContext(ctx)
+		if err != nil {
+			return response.WithCode(500).WithError(errors.New("failed get product"))
+		}
+
+		contextualPrompt := fmt.Sprintf("Previous context: %s. User follow-up: %s", lastMsg, req.Prompt)
+
+		answer, err := s.llm.ChatWithHistory(ctx, contextualPrompt)
+		if err != nil {
+			return response.WithCode(500).WithError(errors.New("failed get product"))
+		}
+
+		data := dto.ToLLM(nil, answer)
+		return response.WithCode(200).WithData(data)
 	}
 
 	return response.WithCode(200).WithData("ok")

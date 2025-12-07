@@ -6,15 +6,12 @@ import (
 )
 
 type Config struct {
-	App        App        `yaml:"app,omitempty" json:"app"`
-	DB         DB         `yaml:"db" json:"db"`
-	Websocket  Websocket  `yaml:"web_socket"  json:"web_socket"`
-	JWT        JWT        `yaml:"jwt" json:"jwt"`
-	Logger     Logger     `yaml:"logger" json:"logger"`
-	Kolosal    Kolosal    `yaml:"kolosal"json:"kolosal"`
-	Gemini     Gemini     `yaml:"gemini" json:"gemini"`
-	OpenAI     OpenAI     `yaml:"open_ai" json:"open_ai"`
-	Mistral    Mistral    `yaml:"mistral" json:"mistral"`
+	App    App    `yaml:"app,omitempty" json:"app"`
+	DB     DB     `yaml:"db" json:"db"`
+	Redis  Redis  `yaml:"redis"  json:"redis"`
+	JWT    JWT    `yaml:"jwt" json:"jwt"`
+	Logger Logger `yaml:"logger" json:"logger"`
+	LLM    LLM    `yaml:"llm" json:"llm"`
 	RajaOngkir RajaOngkir `yaml:"rajaongkir" json:"rajaongkir"`
 }
 
@@ -25,9 +22,11 @@ type App struct {
 	//WriteTimeOut int    `yaml:"write_time_out" json:"write_time_out"`
 }
 
-type Websocket struct {
-	Host string `json:"host"`
-	Path string `json:"path"`
+type Redis struct {
+	Host     string `yaml:"host" json:"host"`
+	Port     string `yaml:"port" json:"port"`
+	Password string `yaml:"password" json:"password"`
+	DB       int    `yaml:"db" json:"db"`
 }
 
 type DB struct {
@@ -43,6 +42,14 @@ type DB struct {
 	//TimeOutSecond int    `yaml:"time_out_second" json:"time_out_second"`
 	//LifeTimeMs    int    `yaml:"life_time_ms" json:"life_time_ms"`
 	//Charset       string `yaml:"charset" json:"charset"`
+}
+
+type LLM struct {
+	Provider string  `yaml:"provider" json:"provider"`
+	Kolosal  Kolosal `yaml:"kolosal"json:"kolosal"`
+	Gemini   Gemini  `yaml:"gemini" json:"gemini"`
+	OpenAI   OpenAI  `yaml:"open_ai" json:"open_ai"`
+	Mistral  Mistral `yaml:"mistral" json:"mistral"`
 }
 
 type Kolosal struct {

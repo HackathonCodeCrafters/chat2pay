@@ -50,5 +50,8 @@ func NewRouter(ctn di.Container) *fiber.App {
 	routes.OrderRouter(api, ctn.Get(bootstrap.OrderHandlerName).(*handlers.OrderHandler), config.JWT.Key)
 	routes.ChatRouter(api, ctn.Get(bootstrap.ChatHandlerName).(*handlers.ChatHandler), config.JWT.Key)
 
+	// Socket
+	handlers.NewSocketEvent(router, ctn)
+
 	return router
 }
