@@ -3,6 +3,7 @@ package handlers
 import (
 	"chat2pay/internal/api/dto"
 	"chat2pay/internal/entities"
+	"chat2pay/internal/pkg/llm"
 	"chat2pay/internal/service"
 	"context"
 	"encoding/json"
@@ -31,15 +32,15 @@ func NewSocketEvent(router fiber.Router, ctn di.Container) {
 
 	// Handle chat messages
 	socketio.On(socketio.EventMessage, func(ep *socketio.EventPayload) {
+		ctx := context.WithValue(context.Background(), "session_id", ep.Kws.GetStringAttribute("user_id"))
 		fmt.Println("📨 Message:", string(ep.Data))
 
 		productService := ctn.Get("product.service").(service.ProductService)
 
 		response := productService.AskProduct(
-			context.Background(),
+			ctx,
 			&dto.AskProduct{
-				SessionId: ep.Kws.GetStringAttribute("user_id"),
-				Prompt:    string(ep.Data)},
+				Prompt: string(ep.Data)},
 		)
 
 		if response.Code == 200 {
@@ -53,7 +54,7 @@ func NewSocketEvent(router fiber.Router, ctn di.Container) {
 					ep.Kws.Emit([]byte(data.Message), socketio.TextMessage)
 				}
 			} else {
-				fmt.Println("error converting struct")
+				ep.Kws.Emit([]byte("Something went wrong, try again later!"), socketio.TextMessage)
 			}
 
 		} else {
@@ -69,15 +70,16 @@ func NewSocketEvent(router fiber.Router, ctn di.Container) {
 
 	// ---- SOCKET.IO ENTRYPOINT ----
 	router.Get("/ws/chat/:id", socketio.New(func(kws *socketio.Websocket) {
+
 		userID := kws.Params("id")
 		entities.SocketClients[userID] = kws.UUID
 		kws.SetAttribute("user_id", userID)
 
-		//llmPackage := ctn.Get("llm.package").(llm.LLM)
+		llmPackage := ctn.Get("llm.package").(llm.LLM)
 
-		//llmPackage.NewConnection(userID)
+		ctx := context.WithValue(context.Background(), "session_id", userID)
+		llmPackage.NewConnection(ctx)
 
-		kws.Emit([]byte(fmt.Sprintf("👋 Welcome %s!", userID)), socketio.TextMessage)
-		//kws.Broadcast([]byte(fmt.Sprintf("📢 %s joined the chat", userID)), true, socketio.TextMessage)
+		kws.Emit([]byte(fmt.Sprintf("👋 Welcome", userID)), socketio.TextMessage)
 	}))
 }

@@ -26,7 +26,7 @@ func NewKolosalLLM(url, apiKey, modelName string) *KolosalLLM {
 	}
 }
 
-func (c *KolosalLLM) ChatWithHistory(ctx context.Context, sessionId string, userMessage string) (string, error) {
+func (c *KolosalLLM) ChatWithHistory(ctx context.Context, userMessage string) (string, error) {
 	panic("implement me")
 }
 
@@ -34,11 +34,11 @@ func (c *KolosalLLM) ClassifyIntent(ctx context.Context, userMessage string) (st
 	panic("implement me")
 }
 
-func (c *KolosalLLM) NewConnection(ctx context.Context, sessionId string) error {
+func (c *KolosalLLM) NewConnection(ctx context.Context) error {
 	panic("implement me")
 }
 
-func (c *KolosalLLM) GetLastMessageContext(ctx context.Context, sessionID string) (string, error) {
+func (c *KolosalLLM) GetLastMessageContext(ctx context.Context) (string, error) {
 	panic("implement me")
 }
 
