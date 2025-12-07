@@ -238,23 +238,57 @@ func (c *MistralLLM) Chat(ctx context.Context, userMessage string) (string, erro
 }
 
 func (c *MistralLLM) GetLastMessageContext(ctx context.Context) (string, error) {
-	sessionId := ctx.Value("session_id")
-	val, err := c.redisClient.Get(ctx, fmt.Sprintf(`history_context:%s`, sessionId))
+
+	sessionId, ok := ctx.Value("session_id").(string)
+	if !ok || sessionId == "" {
+		return "", fmt.Errorf("missing session_id in context")
+	}
+
+	key := fmt.Sprintf("history_context:%s", sessionId)
+
+	// Fetch Redis history
+	raw, err := c.redisClient.Get(ctx, key)
 	if err != nil {
 		return "", err
 	}
 
-	history := []llms.MessageContent{}
-	err = json.Unmarshal([]byte(*val), &history)
-	if err != nil {
+	if raw == nil {
 		return "", nil
 	}
 
-	part := history[len(history)-1].Parts[len(history[len(history)-1].Parts)]
+	var history []llms.MessageContent
 
-	result := contentPartToString(part)
+	if raw != nil {
+		if err := json.Unmarshal([]byte(*raw), &history); err != nil {
+			// corrupt JSON → reset history
+			history = []llms.MessageContent{}
+		}
+	}
 
-	return result, nil
+	// ---- Prevent panic: check length ----
+	if len(history) == 0 {
+		return "", fmt.Errorf("no history available")
+	}
+
+	// If only 1 message exists, return that safely
+	if len(history) == 1 {
+		return extractMessage(history[0]), nil
+	}
+
+	// If 2 or more messages → return last AI message
+	last := history[len(history)-1]
+
+	return extractMessage(last), nil
+}
+
+func extractMessage(msg llms.MessageContent) string {
+	if len(msg.Parts) == 0 {
+		return ""
+	}
+	if text, ok := msg.Parts[0].(llms.TextContent); ok {
+		return text.Text
+	}
+	return ""
 }
 
 func contentPartToString(part llms.ContentPart) string {

@@ -207,7 +207,6 @@ func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *p
 			log.Error(fmt.Sprintf("error creating product: %v", err))
 			return response.WithCode(500).WithError(errors.New("failed get product"))
 		}
-		fmt.Println("product --> ", product)
 		data := dto.ToLLM(&product, "Berikut daftar produk yang mungkin relevan:")
 		return response.WithCode(200).WithData(data)
 
