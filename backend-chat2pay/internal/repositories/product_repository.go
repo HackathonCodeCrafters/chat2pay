@@ -227,7 +227,7 @@ func (r *productRepository) GetProductEmbedding(ctx context.Context, vector []fl
 	`)
 
 	embed := &entities.ProductEmbedding{}
-	if err := r.DB.QueryRowContext(ctx, query, pgvector.NewVector(vector)).Scan(&embed.ID, &embed.ProductId, &embed.Distance); err != nil {
+	if err := r.DB.QueryRowContext(ctx, query, pgvector.NewVector(vector)).Scan(&embed.ID, &embed.ProductId, &embed.Similarity); err != nil {
 		return nil, err
 	}
 
@@ -236,13 +236,14 @@ func (r *productRepository) GetProductEmbedding(ctx context.Context, vector []fl
 
 func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error) {
 	query := `
-		SELECT id, product_id, embedding <-> $1 AS distance
+		SELECT id, 
+		       product_id,   
+		       1 - (embedding <=> $1) AS similarity
 		FROM product_embedding
-		ORDER BY distance ASC
-		LIMIT $2;
+		ORDER BY similarity ASC;
 	`
 
-	rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector), 5)
+	rows, err := r.DB.QueryContext(ctx, query, pgvector.NewVector(vector))
 	if err != nil {
 		return nil, err
 	}
@@ -251,10 +252,13 @@ func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector 
 	var results []entities.ProductEmbedding
 	for rows.Next() {
 		var pe entities.ProductEmbedding
-		if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Distance); err != nil {
+		if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Similarity); err != nil {
 			return nil, err
 		}
-		results = append(results, pe)
+		fmt.Println("pe.Similarity --> ", pe.Similarity)
+		if pe.Similarity >= 0.6 {
+			results = append(results, pe)
+		}
 	}
 
 	return results, nil

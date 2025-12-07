@@ -25,10 +25,10 @@ type (
 	}
 
 	ProductEmbedding struct {
-		ID        string    `json:"id"`
-		ProductId string    `json:"product_id"`
-		Content   string    `json:"content"`
-		Embedding []float32 `json:"embedding" pg:"type:vector(3)"`
-		Distance  float64   `json:"distance"`
+		ID         string    `json:"id"`
+		ProductId  string    `json:"product_id"`
+		Content    string    `json:"content"`
+		Embedding  []float32 `json:"embedding" pg:"type:vector(3)"`
+		Similarity float64   `json:"distance"`
 	}
 )

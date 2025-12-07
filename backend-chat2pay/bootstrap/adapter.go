@@ -56,46 +56,5 @@ func NewAdapter() *[]di.Def {
 				return redisClient, nil
 			},
 		},
-		//{
-		//	Name:  SocketAdapter,
-		//	Scope: di.App,
-		//	Build: func(ctn di.Container) (interface{}, error) {
-		//		config := ctn.Get(ConfigDefName).(*yaml.Config)
-		//		// Define the WebSocket server URL
-		//		u := url.URL{Scheme: "ws", Host: "localhost:8080", Path: "/echo"}
-		//
-		//		// Establish the WebSocket connection
-		//		ws, err := socket.Dial(u.String(), "", u.String())
-		//		if err != nil {
-		//			log.Fatalf("Failed to dial WebSocket: %v", err)
-		//		}
-		//		defer ws.Close()
-		//
-		//		fmt.Println("Connected to WebSocket server.")
-		//
-		//		// Send a message
-		//		message := []byte("Hello from Go client!")
-		//		_, err = ws.Write(message)
-		//		if err != nil {
-		//			log.Fatalf("Failed to write to WebSocket: %v", err)
-		//		}
-		//		fmt.Printf("Sent: %s\n", message)
-		//
-		//		// Receive a message
-		//		var msg = make([]byte, 512)
-		//		n, err := ws.Read(msg)
-		//		if err != nil {
-		//			log.Fatalf("Failed to read from WebSocket: %v", err)
-		//		}
-		//		fmt.Printf("Received: %s\n", msg[:n])
-		//
-		//		// Keep the connection open for a bit
-		//		time.Sleep(2 * time.Second)
-		//		return db, err
-		//	},
-		//	Close: func(obj interface{}) error {
-		//		return obj.(*sqlx.DB).Close()
-		//	},
-		//},
 	}
 }

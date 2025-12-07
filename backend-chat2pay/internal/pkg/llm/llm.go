@@ -22,10 +22,10 @@ type LLM interface {
 	GenerateContent(ctx context.Context, messages []llms.MessageContent, options ...llms.CallOption) (*llms.ContentResponse, error)
 
 	//Custom behavior
-	ChatWithHistory(ctx context.Context, sessionId string, userMessage string) (string, error)
+	ChatWithHistory(ctx context.Context, userMessage string) (string, error)
 	ClassifyIntent(ctx context.Context, userMessage string) (string, error)
-	NewConnection(ctx context.Context, sessionId string) error
-	GetLastMessageContext(ctx context.Context, sessionID string) (string, error)
+	NewConnection(ctx context.Context) error
+	GetLastMessageContext(ctx context.Context) (string, error)
 }
 
 type llm struct {
@@ -75,18 +75,18 @@ func (l *llm) EmbedQuery(ctx context.Context, text string) ([]float32, error) {
 	return l.llm.EmbedQuery(ctx, text)
 }
 
-func (c *llm) ChatWithHistory(ctx context.Context, sessionId string, userMessage string) (string, error) {
-	return c.llm.ChatWithHistory(ctx, sessionId, userMessage)
+func (c *llm) ChatWithHistory(ctx context.Context, userMessage string) (string, error) {
+	return c.llm.ChatWithHistory(ctx, userMessage)
 }
 
 func (c *llm) ClassifyIntent(ctx context.Context, userMessage string) (string, error) {
 	return c.llm.ClassifyIntent(ctx, userMessage)
 }
 
-func (c *llm) NewConnection(ctx context.Context, sessionId string) error {
-	return c.llm.NewConnection(ctx, sessionId)
+func (c *llm) NewConnection(ctx context.Context) error {
+	return c.llm.NewConnection(ctx)
 }
 
-func (c *llm) GetLastMessageContext(ctx context.Context, sessionID string) (string, error) {
-	return c.llm.GetLastMessageContext(ctx, sessionID)
+func (c *llm) GetLastMessageContext(ctx context.Context) (string, error) {
+	return c.llm.GetLastMessageContext(ctx)
 }
