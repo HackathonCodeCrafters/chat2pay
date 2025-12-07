@@ -16,3 +16,21 @@ jwt:
 
 logger:
   enable: false
+
+rajaongkir:
+  api_key: your_api_key
+
+llm:
+  provider: mistral
+  gemini:
+    api_key: your_api_key
+  open_ai:
+    api_key: your_api_key
+  mistral:
+    api_key: your_api_key
+
+redis:
+  host: localhost
+  port: 6379
+  password: your_api_key
+  db: 0
