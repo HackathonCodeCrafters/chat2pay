@@ -160,7 +160,6 @@ func (s *productService) AskProduct(ctx context.Context, req *dto.AskProduct) *p
 		return response.WithCode(500).WithError(errors.New("failed classify intent"))
 	}
 
-	fmt.Println("classify --> ", classify)
 	switch classify {
 	case "chit_chat":
 

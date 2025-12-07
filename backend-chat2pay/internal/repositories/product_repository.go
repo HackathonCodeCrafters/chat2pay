@@ -257,7 +257,6 @@ func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector 
 		if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Similarity); err != nil {
 			return nil, err
 		}
-		fmt.Println("Cosine Distance --> ", pe.Similarity)
 		results = append(results, pe)
 	}
 
