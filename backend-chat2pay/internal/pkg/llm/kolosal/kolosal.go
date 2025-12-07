@@ -26,6 +26,10 @@ func NewKolosalLLM(url, apiKey, modelName string) *KolosalLLM {
 	}
 }
 
+func (c *KolosalLLM) Chat(ctx context.Context, userMessage string) (string, error) {
+	panic("implement me")
+}
+
 func (c *KolosalLLM) ChatWithHistory(ctx context.Context, userMessage string) (string, error) {
 	panic("implement me")
 }

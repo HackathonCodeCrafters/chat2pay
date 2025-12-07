@@ -2,9 +2,9 @@ package bootstrap
 
 import (
 	"chat2pay/config/yaml"
-	"chat2pay/internal/pkg/llm/gemini"
-	"chat2pay/internal/pkg/llm/mistral"
-	"chat2pay/internal/pkg/llm/openai"
+	// "chat2pay/internal/pkg/llm/gemini"
+	// "chat2pay/internal/pkg/llm/mistral"
+	// "chat2pay/internal/pkg/llm/openai"
 	"chat2pay/internal/pkg/rajaongkir"
 	"chat2pay/internal/pkg/llm"
 	"chat2pay/internal/pkg/redis"

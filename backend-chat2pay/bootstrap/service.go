@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"chat2pay/config/yaml"
 	"chat2pay/internal/middlewares/jwt"
-	"chat2pay/internal/pkg/llm/mistral"
+	// "chat2pay/internal/pkg/llm/mistral"
 	"chat2pay/internal/pkg/llm"
 	"chat2pay/internal/pkg/redis"
 	"chat2pay/internal/repositories"

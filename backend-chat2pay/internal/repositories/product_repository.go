@@ -25,6 +25,7 @@ type ProductRepository interface {
 	CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error
 	GetProductEmbedding(ctx context.Context, vector []float32) (*entities.ProductEmbedding, error)
 	GetProductEmbeddingList(ctx context.Context, vector []float32) ([]entities.ProductEmbedding, error)
+	GetProductEmbeddingListWithPrice(ctx context.Context, vector []float32, maxPrice float64) ([]entities.ProductEmbedding, error)
 }
 
 type productRepository struct {
@@ -266,7 +267,7 @@ func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector 
             1 - (pe.embedding <=> $1) as similarity_score  -- Convert distance to similarity
         FROM product_embedding pe
         JOIN product p ON pe.product_id = p.id
-        WHERE p.status = 'active'::public.product_status_enu
+        WHERE p.status = 'active'::public.product_status_enum
         AND p.stock > 0
         AND 1 - (pe.embedding <=> $1) > $2  -- Minimum similarity threshold (0.3 = 70% similarity)
         ORDER BY similarity_score DESC
@@ -297,6 +298,45 @@ func (r *productRepository) GetProductEmbeddingList(ctx context.Context, vector 
 
 	return results, nil
 }
+func (r *productRepository) GetProductEmbeddingListWithPrice(ctx context.Context, vector []float32, maxPrice float64) ([]entities.ProductEmbedding, error) {
+	embeddingQuery := `
+        SELECT 
+            pe.id,
+            pe.product_id,
+            1 - (pe.embedding <=> $1) as similarity_score
+        FROM product_embedding pe
+        JOIN product p ON pe.product_id = p.id
+        WHERE p.status = 'active'::public.product_status_enum
+        AND p.stock > 0
+        AND p.price <= $2
+        AND 1 - (pe.embedding <=> $1) > $3
+        ORDER BY similarity_score DESC
+        LIMIT $4
+    `
+
+	rows, err := r.DB.QueryContext(ctx, embeddingQuery,
+		pgvector.NewVector(vector),
+		maxPrice,
+		0.2, // Lower threshold for price-filtered search
+		10,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []entities.ProductEmbedding
+	for rows.Next() {
+		var pe entities.ProductEmbedding
+		if err := rows.Scan(&pe.ID, &pe.ProductId, &pe.Similarity); err != nil {
+			return nil, err
+		}
+		results = append(results, pe)
+	}
+
+	return results, nil
+}
+
 func (r *productRepository) CreateProductEmbedding(ctx context.Context, embedding *entities.ProductEmbedding) error {
 	query := `
 		INSERT INTO product_embedding (

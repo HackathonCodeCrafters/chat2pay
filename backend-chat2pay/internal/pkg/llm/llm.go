@@ -22,6 +22,7 @@ type LLM interface {
 	GenerateContent(ctx context.Context, messages []llms.MessageContent, options ...llms.CallOption) (*llms.ContentResponse, error)
 
 	//Custom behavior
+	Chat(ctx context.Context, userMessage string) (string, error)
 	ChatWithHistory(ctx context.Context, userMessage string) (string, error)
 	ClassifyIntent(ctx context.Context, userMessage string) (string, error)
 	NewConnection(ctx context.Context) error
@@ -89,4 +90,8 @@ func (c *llm) NewConnection(ctx context.Context) error {
 
 func (c *llm) GetLastMessageContext(ctx context.Context) (string, error) {
 	return c.llm.GetLastMessageContext(ctx)
+}
+
+func (c *llm) Chat(ctx context.Context, userMessage string) (string, error) {
+	return c.llm.Chat(ctx, userMessage)
 }

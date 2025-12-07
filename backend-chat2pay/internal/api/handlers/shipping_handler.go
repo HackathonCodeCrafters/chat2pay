@@ -579,7 +579,7 @@ func (h *ShippingHandler) GetCities(c *fiber.Ctx) error {
 
 	if h.useAPI && h.rajaOngkir != nil {
 		cities, err := h.rajaOngkir.GetCities(provinceID)
-		if err == nil {
+		if err == nil && len(cities) > 0 {
 			// Convert to local type
 			result := make([]City, len(cities))
 			for i, city := range cities {
