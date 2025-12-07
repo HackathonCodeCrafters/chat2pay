@@ -5,147 +5,137 @@ import (
 	"chat2pay/internal/api/dto"
 	"chat2pay/internal/api/presenter"
 	"chat2pay/internal/entities"
-	"chat2pay/internal/pkg/logger"
 	"chat2pay/internal/repositories"
 	"context"
 	"errors"
-	"fmt"
-	"time"
+	"github.com/google/uuid"
 )
 
 type OrderService interface {
-	Create(ctx context.Context, req *dto.OrderRequest) *presenter.Response
-	GetAll(ctx context.Context, merchantId, customerId string, page, limit int) *presenter.Response
-	GetById(ctx context.Context, id string) *presenter.Response
-	UpdateStatus(ctx context.Context, id string, status string) *presenter.Response
-	Delete(ctx context.Context, id string) *presenter.Response
+	CreateOrder(ctx context.Context, customerID string, req *dto.CreateOrderRequest) *presenter.Response
+	GetOrderByID(ctx context.Context, id string) *presenter.Response
+	GetCustomerOrders(ctx context.Context, customerID string, page, limit int) *presenter.Response
+	GetMerchantOrders(ctx context.Context, merchantID string, page, limit int) *presenter.Response
+	UpdateOrderStatus(ctx context.Context, orderID, status string) *presenter.Response
+	UpdateTrackingNumber(ctx context.Context, orderID, trackingNumber string) *presenter.Response
 }
 
 type orderService struct {
-	orderRepo    repositories.OrderRepository
-	productRepo  repositories.ProductRepository
-	customerRepo repositories.CustomerRepository
-	merchantRepo repositories.MerchantRepository
-	cfg          *yaml.Config
+	cfg         *yaml.Config
+	orderRepo   repositories.OrderRepository
+	productRepo repositories.ProductRepository
 }
 
-func NewOrderService(
-	orderRepo repositories.OrderRepository,
-	productRepo repositories.ProductRepository,
-	customerRepo repositories.CustomerRepository,
-	merchantRepo repositories.MerchantRepository,
-	cfg *yaml.Config,
-) OrderService {
+func NewOrderService(cfg *yaml.Config, orderRepo repositories.OrderRepository, productRepo repositories.ProductRepository) OrderService {
 	return &orderService{
-		orderRepo:    orderRepo,
-		productRepo:  productRepo,
-		customerRepo: customerRepo,
-		merchantRepo: merchantRepo,
-		cfg:          cfg,
+		cfg:         cfg,
+		orderRepo:   orderRepo,
+		productRepo: productRepo,
 	}
 }
 
-func (s *orderService) Create(ctx context.Context, req *dto.OrderRequest) *presenter.Response {
-	var (
-		response = presenter.Response{}
-		log      = logger.NewLog("order_service_create", s.cfg.Logger.Enable)
-	)
+func (s *orderService) CreateOrder(ctx context.Context, customerID string, req *dto.CreateOrderRequest) *presenter.Response {
+	response := presenter.NewResponse()
 
-	log.Info("validating customer")
-	customer, err := s.customerRepo.FindOneById(ctx, req.CustomerID)
-	if err != nil {
-		log.Error(fmt.Sprintf("error checking customer: %v", err))
-		return response.WithCode(500).WithError(errors.New("something went wrong"))
-	}
-	if customer == nil {
-		log.Warn("customer not found")
-		return response.WithCode(404).WithError(errors.New("customer not found"))
-	}
+	// Calculate subtotal and validate products
+	var subtotal float64
+	var merchantID string
+	orderItems := make([]entities.OrderItem, 0, len(req.Items))
 
-	log.Info("validating merchant")
-	merchant, err := s.merchantRepo.FindOneById(ctx, req.MerchantID)
-	if err != nil {
-		log.Error(fmt.Sprintf("error checking merchant: %v", err))
-		return response.WithCode(500).WithError(errors.New("something went wrong"))
-	}
-	if merchant == nil {
-		log.Warn("merchant not found")
-		return response.WithCode(404).WithError(errors.New("merchant not found"))
-	}
-
-	var orderItems []entities.OrderItem
-	var subtotal float64 = 0
-
-	log.Info("validating products and calculating total")
 	for _, item := range req.Items {
-		product, err := s.productRepo.FindOneById(ctx, item.ProductID)
+		product, err := s.productRepo.FindByID(ctx, item.ProductID)
 		if err != nil {
-			log.Error(fmt.Sprintf("error fetching product: %v", err))
-			return response.WithCode(500).WithError(errors.New("something went wrong"))
-		}
-		if product == nil {
-			log.Warn(fmt.Sprintf("product with id %d not found", item.ProductID))
-			return response.WithCode(404).WithError(fmt.Errorf("product with id %d not found", item.ProductID))
+			return response.WithCode(404).WithError(errors.New("product not found: " + item.ProductID))
 		}
 
 		if product.Stock < item.Quantity {
-			log.Warn(fmt.Sprintf("insufficient stock for product %s", product.Name))
-			return response.WithCode(400).WithError(fmt.Errorf("insufficient stock for product: %s", product.Name))
+			return response.WithCode(400).WithError(errors.New("insufficient stock for: " + product.Name))
 		}
 
-		itemTotal := product.Price * float64(item.Quantity)
-		subtotal += itemTotal
+		// All products must be from the same merchant
+		if merchantID == "" {
+			merchantID = product.MerchantID
+		} else if merchantID != product.MerchantID {
+			return response.WithCode(400).WithError(errors.New("all products must be from the same merchant"))
+		}
+
+		itemSubtotal := product.Price * float64(item.Quantity)
+		subtotal += itemSubtotal
 
 		orderItems = append(orderItems, entities.OrderItem{
-			ProductID:           item.ProductID,
-			ProductNameSnapshot: product.Name,
-			UnitPrice:           product.Price,
-			Qty:                 item.Quantity,
-			TotalPrice:          itemTotal,
+			ID:           uuid.New().String(),
+			ProductID:    product.ID,
+			ProductName:  product.Name,
+			ProductPrice: product.Price,
+			Quantity:     item.Quantity,
+			Subtotal:     itemSubtotal,
 		})
 	}
 
-	totalAmount := subtotal + req.ShippingAmount - req.DiscountAmount
+	total := subtotal + req.ShippingCost
 
-	orderNumber := fmt.Sprintf("ORD-%d-%d", req.MerchantID, time.Now().Unix())
-
+	// Create order
 	order := &entities.Order{
-		OrderNumber:    orderNumber,
-		CustomerID:     req.CustomerID,
-		MerchantID:     req.MerchantID,
-		OutletID:       req.OutletID,
-		Status:         "pending",
-		SubtotalAmount: subtotal,
-		ShippingAmount: req.ShippingAmount,
-		DiscountAmount: req.DiscountAmount,
-		TotalAmount:    totalAmount,
+		ID:                 uuid.New().String(),
+		CustomerID:         customerID,
+		MerchantID:         merchantID,
+		Status:             entities.OrderStatusPending,
+		Subtotal:           subtotal,
+		ShippingCost:       req.ShippingCost,
+		Total:              total,
+		Courier:            &req.Courier,
+		CourierService:     &req.CourierService,
+		ShippingEtd:        &req.ShippingEtd,
+		ShippingAddress:    &req.ShippingAddress,
+		ShippingCity:       &req.ShippingCity,
+		ShippingProvince:   &req.ShippingProvince,
+		ShippingPostalCode: &req.ShippingPostalCode,
+		PaymentStatus:      entities.PaymentStatusPending,
 	}
 
-	log.Info("creating order with items")
-	created, err := s.orderRepo.CreateWithItems(ctx, order, orderItems)
-	if err != nil {
-		log.Error(fmt.Sprintf("error creating order: %v", err))
+	if req.Notes != "" {
+		order.Notes = &req.Notes
+	}
+
+	if err := s.orderRepo.Create(ctx, order); err != nil {
 		return response.WithCode(500).WithError(errors.New("failed to create order"))
 	}
 
-	log.Info("updating product stocks")
-	for _, item := range req.Items {
-		err := s.productRepo.UpdateStock(ctx, item.ProductID, -item.Quantity)
-		if err != nil {
-			log.Error(fmt.Sprintf("error updating stock for product %d: %v", item.ProductID, err))
+	// Create order items
+	for i := range orderItems {
+		orderItems[i].OrderID = order.ID
+		if err := s.orderRepo.CreateItem(ctx, &orderItems[i]); err != nil {
+			return response.WithCode(500).WithError(errors.New("failed to create order item"))
 		}
 	}
 
-	createdOrder, _ := s.orderRepo.FindOneById(ctx, created.ID)
-	data := dto.ToOrderResponse(createdOrder)
-	return response.WithCode(201).WithData(data)
+	// Update product stock
+	for _, item := range req.Items {
+		product, _ := s.productRepo.FindByID(ctx, item.ProductID)
+		newStock := product.Stock - item.Quantity
+		s.productRepo.UpdateStock(ctx, item.ProductID, newStock)
+	}
+
+	order.Items = orderItems
+	return response.WithCode(201).WithData(dto.ToOrderResponse(order))
 }
 
-func (s *orderService) GetAll(ctx context.Context, merchantId, customerId string, page, limit int) *presenter.Response {
-	var (
-		response = presenter.Response{}
-		log      = logger.NewLog("order_service_getall", s.cfg.Logger.Enable)
-	)
+func (s *orderService) GetOrderByID(ctx context.Context, id string) *presenter.Response {
+	response := presenter.NewResponse()
+
+	order, err := s.orderRepo.FindByID(ctx, id)
+	if err != nil {
+		return response.WithCode(404).WithError(errors.New("order not found"))
+	}
+
+	items, _ := s.orderRepo.GetOrderItems(ctx, id)
+	order.Items = items
+
+	return response.WithCode(200).WithData(dto.ToOrderResponse(order))
+}
+
+func (s *orderService) GetCustomerOrders(ctx context.Context, customerID string, page, limit int) *presenter.Response {
+	response := presenter.NewResponse()
 
 	if page < 1 {
 		page = 1
@@ -154,114 +144,64 @@ func (s *orderService) GetAll(ctx context.Context, merchantId, customerId string
 		limit = 10
 	}
 
-	offset := (page - 1) * limit
-
-	log.Info("fetching orders")
-	orders, err := s.orderRepo.FindAll(ctx, merchantId, customerId, limit, offset)
+	orders, err := s.orderRepo.FindByCustomerID(ctx, customerID, page, limit)
 	if err != nil {
-		log.Error(fmt.Sprintf("error fetching orders: %v", err))
-		return response.WithCode(500).WithError(errors.New("failed to fetch orders"))
+		return response.WithCode(500).WithError(errors.New("failed to get orders"))
 	}
 
-	total, err := s.orderRepo.Count(ctx, merchantId, customerId)
-	if err != nil {
-		log.Error(fmt.Sprintf("error counting orders: %v", err))
-		return response.WithCode(500).WithError(errors.New("failed to count orders"))
+	// Load items for each order
+	for i := range orders {
+		items, _ := s.orderRepo.GetOrderItems(ctx, orders[i].ID)
+		orders[i].Items = items
 	}
 
-	data := dto.ToOrderListResponse(orders, total, page, limit)
-	return response.WithCode(200).WithData(data)
+	total, _ := s.orderRepo.CountByCustomerID(ctx, customerID)
+	return response.WithCode(200).WithData(dto.ToOrderListResponse(orders, total, page, limit))
 }
 
-func (s *orderService) GetById(ctx context.Context, id string) *presenter.Response {
-	var (
-		response = presenter.Response{}
-		log      = logger.NewLog("order_service_getbyid", s.cfg.Logger.Enable)
-	)
+func (s *orderService) GetMerchantOrders(ctx context.Context, merchantID string, page, limit int) *presenter.Response {
+	response := presenter.NewResponse()
 
-	log.Info(fmt.Sprintf("fetching order with id: %d", id))
-	order, err := s.orderRepo.FindOneById(ctx, id)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	orders, err := s.orderRepo.FindByMerchantID(ctx, merchantID, page, limit)
 	if err != nil {
-		log.Error(fmt.Sprintf("error fetching order: %v", err))
-		return response.WithCode(500).WithError(errors.New("something went wrong"))
+		return response.WithCode(500).WithError(errors.New("failed to get orders"))
 	}
 
-	if order == nil {
-		log.Warn("order not found")
-		return response.WithCode(404).WithError(errors.New("order not found"))
+	// Load items for each order
+	for i := range orders {
+		items, _ := s.orderRepo.GetOrderItems(ctx, orders[i].ID)
+		orders[i].Items = items
 	}
 
-	data := dto.ToOrderResponse(order)
-	return response.WithCode(200).WithData(data)
+	total, _ := s.orderRepo.CountByMerchantID(ctx, merchantID)
+	return response.WithCode(200).WithData(dto.ToOrderListResponse(orders, total, page, limit))
 }
 
-func (s *orderService) UpdateStatus(ctx context.Context, id string, status string) *presenter.Response {
-	var (
-		response = presenter.Response{}
-		log      = logger.NewLog("order_service_updatestatus", s.cfg.Logger.Enable)
-	)
+func (s *orderService) UpdateOrderStatus(ctx context.Context, orderID, status string) *presenter.Response {
+	response := presenter.NewResponse()
 
-	log.Info(fmt.Sprintf("fetching order with id: %d", id))
-	order, err := s.orderRepo.FindOneById(ctx, id)
+	err := s.orderRepo.UpdateStatus(ctx, orderID, status)
 	if err != nil {
-		log.Error(fmt.Sprintf("error fetching order: %v", err))
-		return response.WithCode(500).WithError(errors.New("something went wrong"))
-	}
-
-	if order == nil {
-		log.Warn("order not found")
-		return response.WithCode(404).WithError(errors.New("order not found"))
-	}
-
-	validStatuses := map[string]bool{
-		"pending":   true,
-		"paid":      true,
-		"shipped":   true,
-		"completed": true,
-		"cancelled": true,
-	}
-
-	if !validStatuses[status] {
-		log.Warn("invalid status")
-		return response.WithCode(400).WithError(errors.New("invalid status"))
-	}
-
-	log.Info("updating order status")
-	err = s.orderRepo.UpdateStatus(ctx, id, status)
-	if err != nil {
-		log.Error(fmt.Sprintf("error updating order status: %v", err))
 		return response.WithCode(500).WithError(errors.New("failed to update order status"))
 	}
 
-	updatedOrder, _ := s.orderRepo.FindOneById(ctx, id)
-	data := dto.ToOrderResponse(updatedOrder)
-	return response.WithCode(200).WithData(data)
+	return response.WithCode(200).WithData(map[string]string{"message": "Order status updated"})
 }
 
-func (s *orderService) Delete(ctx context.Context, id string) *presenter.Response {
-	var (
-		response = presenter.Response{}
-		log      = logger.NewLog("order_service_delete", s.cfg.Logger.Enable)
-	)
+func (s *orderService) UpdateTrackingNumber(ctx context.Context, orderID, trackingNumber string) *presenter.Response {
+	response := presenter.NewResponse()
 
-	log.Info(fmt.Sprintf("checking if order exists: %d", id))
-	order, err := s.orderRepo.FindOneById(ctx, id)
+	err := s.orderRepo.UpdateTrackingNumber(ctx, orderID, trackingNumber)
 	if err != nil {
-		log.Error(fmt.Sprintf("error fetching order: %v", err))
-		return response.WithCode(500).WithError(errors.New("something went wrong"))
+		return response.WithCode(500).WithError(errors.New("failed to update tracking number"))
 	}
 
-	if order == nil {
-		log.Warn("order not found")
-		return response.WithCode(404).WithError(errors.New("order not found"))
-	}
-
-	log.Info("deleting order")
-	err = s.orderRepo.Delete(ctx, id)
-	if err != nil {
-		log.Error(fmt.Sprintf("error deleting order: %v", err))
-		return response.WithCode(500).WithError(errors.New("failed to delete order"))
-	}
-
-	return response.WithCode(200).WithData(map[string]string{"message": "order deleted successfully"})
+	return response.WithCode(200).WithData(map[string]string{"message": "Tracking number updated"})
 }

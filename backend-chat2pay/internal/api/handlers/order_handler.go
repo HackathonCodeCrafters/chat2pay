@@ -13,152 +13,120 @@ type OrderHandler struct {
 }
 
 func NewOrderHandler(orderService service.OrderService) *OrderHandler {
-	return &OrderHandler{
-		orderService: orderService,
-	}
+	return &OrderHandler{orderService: orderService}
 }
 
-// Create godoc
-// @Summary Create Order
-// @Description Membuat order baru
+// CreateOrder godoc
+// @Summary Create new order
+// @Description Create a new order (checkout)
 // @Tags Orders
 // @Accept json
 // @Produce json
-// @Param request body dto.OrderRequest true "Order data"
-// @Success 201 {object} presenter.SuccessResponseSwagger{data=dto.OrderResponse}
-// @Failure 400 {object} presenter.ErrorResponseSwagger
-// @Failure 401 {object} presenter.ErrorResponseSwagger
-// @Security BearerAuth
+// @Param Authorization header string true "Bearer token"
+// @Param request body dto.CreateOrderRequest true "Order data"
+// @Success 201 {object} presenter.SuccessResponseSwagger
 // @Router /orders [post]
-func (h *OrderHandler) Create(c *fiber.Ctx) error {
-	var req dto.OrderRequest
+func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
+	customerIDVal := c.Locals("customer_id")
+	if customerIDVal == nil {
+		return c.Status(401).JSON(presenter.ErrorResponse(fiber.NewError(401, "Unauthorized: customer_id not found")))
+	}
+	customerID := customerIDVal.(string)
 
+	var req dto.CreateOrderRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(presenter.ErrorResponse(err))
 	}
 
-	response := h.orderService.Create(c.Context(), &req)
-
-	if response.Errors != nil {
-		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
-	}
-
-	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
+	result := h.orderService.CreateOrder(c.Context(), customerID, &req)
+	return c.Status(result.Code).JSON(result)
 }
 
-// GetAll godoc
-// @Summary Get All Orders
-// @Description Mendapatkan daftar semua order
+// GetOrder godoc
+// @Summary Get order by ID
+// @Description Get order details
 // @Tags Orders
-// @Accept json
 // @Produce json
-// @Param merchant_id query string false "Filter by Merchant ID"
-// @Param customer_id query string false "Filter by Customer ID"
-// @Param page query int false "Page number" default(1)
-// @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} presenter.SuccessResponseSwagger{data=dto.OrderListResponse}
-// @Failure 401 {object} presenter.ErrorResponseSwagger
-// @Security BearerAuth
-// @Router /orders [get]
-func (h *OrderHandler) GetAll(c *fiber.Ctx) error {
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Order ID"
+// @Success 200 {object} presenter.SuccessResponseSwagger
+// @Router /orders/{id} [get]
+func (h *OrderHandler) GetOrder(c *fiber.Ctx) error {
+	id := c.Params("id")
+	result := h.orderService.GetOrderByID(c.Context(), id)
+	return c.Status(result.Code).JSON(result)
+}
+
+// GetCustomerOrders godoc
+// @Summary Get customer orders
+// @Description Get all orders for current customer
+// @Tags Orders
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Success 200 {object} presenter.SuccessResponseSwagger
+// @Router /orders/customer [get]
+func (h *OrderHandler) GetCustomerOrders(c *fiber.Ctx) error {
+	customerIDVal := c.Locals("customer_id")
+	if customerIDVal == nil {
+		return c.Status(401).JSON(presenter.ErrorResponse(fiber.NewError(401, "Unauthorized: customer_id not found")))
+	}
+	customerID := customerIDVal.(string)
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 
-	merchantId := c.Query("merchant_id")
-	customerId := c.Query("customer_id")
-
-	response := h.orderService.GetAll(c.Context(), merchantId, customerId, page, limit)
-
-	if response.Errors != nil {
-		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
-	}
-
-	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
+	result := h.orderService.GetCustomerOrders(c.Context(), customerID, page, limit)
+	return c.Status(result.Code).JSON(result)
 }
 
-// GetById godoc
-// @Summary Get Order by ID
-// @Description Mendapatkan detail order berdasarkan ID
+// GetMerchantOrders godoc
+// @Summary Get merchant orders
+// @Description Get all orders for current merchant
+// @Tags Orders
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Success 200 {object} presenter.SuccessResponseSwagger
+// @Router /orders/merchant [get]
+func (h *OrderHandler) GetMerchantOrders(c *fiber.Ctx) error {
+	merchantIDVal := c.Locals("merchant_id")
+	if merchantIDVal == nil {
+		return c.Status(401).JSON(presenter.ErrorResponse(fiber.NewError(401, "Unauthorized: merchant_id not found")))
+	}
+	merchantID := merchantIDVal.(string)
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+
+	result := h.orderService.GetMerchantOrders(c.Context(), merchantID, page, limit)
+	return c.Status(result.Code).JSON(result)
+}
+
+// UpdateOrderStatus godoc
+// @Summary Update order status
+// @Description Update order status (merchant only)
 // @Tags Orders
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "Bearer token"
 // @Param id path string true "Order ID"
-// @Success 200 {object} presenter.SuccessResponseSwagger{data=dto.OrderResponse}
-// @Failure 400 {object} presenter.ErrorResponseSwagger
-// @Failure 401 {object} presenter.ErrorResponseSwagger
-// @Failure 404 {object} presenter.ErrorResponseSwagger
-// @Security BearerAuth
-// @Router /orders/{id} [get]
-func (h *OrderHandler) GetById(c *fiber.Ctx) error {
-	if c.Params("id") == "" {
-		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
-	}
-	response := h.orderService.GetById(c.Context(), c.Params("id"))
-
-	if response.Errors != nil {
-		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
-	}
-
-	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
-}
-
-// UpdateStatus godoc
-// @Summary Update Order Status
-// @Description Update status order (Merchant Only)
-// @Tags Orders
-// @Accept json
-// @Produce json
-// @Param id path string true "Order ID"
-// @Param request body dto.OrderStatusUpdateRequest true "Status update"
-// @Success 200 {object} presenter.SuccessResponseSwagger{data=dto.OrderResponse}
-// @Failure 400 {object} presenter.ErrorResponseSwagger
-// @Failure 401 {object} presenter.ErrorResponseSwagger
-// @Failure 403 {object} presenter.ErrorResponseSwagger
-// @Failure 404 {object} presenter.ErrorResponseSwagger
-// @Security BearerAuth
+// @Param request body dto.UpdateOrderStatusRequest true "Status data"
+// @Success 200 {object} presenter.SuccessResponseSwagger
 // @Router /orders/{id}/status [patch]
-func (h *OrderHandler) UpdateStatus(c *fiber.Ctx) error {
-	if c.Params("id") == "" {
-		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
-	}
-	var req dto.OrderStatusUpdateRequest
+func (h *OrderHandler) UpdateOrderStatus(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	var req dto.UpdateOrderStatusRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(presenter.ErrorResponse(err))
 	}
 
-	response := h.orderService.UpdateStatus(c.Context(), c.Params("id"), req.Status)
-
-	if response.Errors != nil {
-		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
+	if req.TrackingNumber != "" {
+		result := h.orderService.UpdateTrackingNumber(c.Context(), id, req.TrackingNumber)
+		return c.Status(result.Code).JSON(result)
 	}
 
-	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
-}
-
-// Delete godoc
-// @Summary Delete Order
-// @Description Menghapus order (Merchant Only)
-// @Tags Orders
-// @Accept json
-// @Produce json
-// @Param id path string true "Order ID"
-// @Success 200 {object} presenter.SuccessResponseSwagger
-// @Failure 400 {object} presenter.ErrorResponseSwagger
-// @Failure 401 {object} presenter.ErrorResponseSwagger
-// @Failure 403 {object} presenter.ErrorResponseSwagger
-// @Failure 404 {object} presenter.ErrorResponseSwagger
-// @Security BearerAuth
-// @Router /orders/{id} [delete]
-func (h *OrderHandler) Delete(c *fiber.Ctx) error {
-	if c.Params("id") == "" {
-		return c.Status(400).JSON(presenter.ErrorResponse(fiber.ErrBadRequest))
-	}
-
-	response := h.orderService.Delete(c.Context(), c.Params("id"))
-
-	if response.Errors != nil {
-		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
-	}
-
-	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
+	result := h.orderService.UpdateOrderStatus(c.Context(), id, req.Status)
+	return c.Status(result.Code).JSON(result)
 }

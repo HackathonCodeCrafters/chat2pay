@@ -71,6 +71,7 @@ func (s *productService) Create(ctx context.Context, req *dto.ProductRequest) *p
 		Price:       req.Price,
 		Stock:       req.Stock,
 		Status:      "active",
+		Image:       stringPtr(req.Image),
 	}
 
 	if req.Status != "" {

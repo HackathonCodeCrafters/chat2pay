@@ -19,6 +19,11 @@ type ProductRequest struct {
 	Price       float64 `json:"price" validate:"required,gt=0"`
 	Stock       int     `json:"stock" validate:"gte=0"`
 	Status      string  `json:"status"`
+	Image       string  `json:"image"`
+	Weight      int     `json:"weight"`
+	Length      int     `json:"length"`
+	Width       int     `json:"width"`
+	Height      int     `json:"height"`
 }
 
 type ProductResponse struct {
@@ -33,6 +38,11 @@ type ProductResponse struct {
 	Price       float64                `json:"price"`
 	Stock       int                    `json:"stock"`
 	Status      string                 `json:"status"`
+	Image       *string                `json:"image,omitempty"`
+	Weight      int                    `json:"weight"`
+	Length      int                    `json:"length"`
+	Width       int                    `json:"width"`
+	Height      int                    `json:"height"`
 	Images      []ProductImageResponse `json:"images,omitempty"`
 	CreatedAt   time.Time              `json:"created_at"`
 	UpdatedAt   time.Time              `json:"updated_at"`
@@ -68,6 +78,11 @@ func ToProductResponse(product *entities.Product) ProductResponse {
 		Price:       product.Price,
 		Stock:       product.Stock,
 		Status:      product.Status,
+		Image:       product.Image,
+		Weight:      product.Weight,
+		Length:      product.Length,
+		Width:       product.Width,
+		Height:      product.Height,
 		CreatedAt:   product.CreatedAt,
 		UpdatedAt:   product.UpdatedAt,
 	}

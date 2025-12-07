@@ -62,37 +62,42 @@ func (c *MistralLLM) EmbedQuery(ctx context.Context, text string) ([]float32, er
 
 func (c *MistralLLM) ClassifyIntent(ctx context.Context, userMessage string) (*ChatClassify, error) {
 	systemPrompt := `
-		You are an Intent Classification AI for a shopping assistant.
+		You are an Intent Classification AI for a shopping assistant in Indonesia.
+		You MUST understand Indonesian language (Bahasa Indonesia).
 		
 		Your job is to classify the user's latest message into ONE of these intent categories:
 		
 		1. chit_chat
 		   - Greeting or casual conversation not related to shopping.
-		   Example: "hi", "how are you", "tell me a joke"
+		   Example: "hi", "halo", "apa kabar", "tell me a joke"
 		
 		2. general_product_request
 		   - The user expresses interest in a product but is not specific enough.
-		   Example: "I need a mouse", "I'm looking for headphones", 
-					"recommend a laptop", "I want a new phone"
+		   Example: "I need a mouse", "cari laptop", "mau beli hp", "ada makanan gak"
 		
 		3. specific_product_search
-		   - The user provides enough details such as budget, specification, brand,
-			 use-case, feature request, or preference.
+		   - The user mentions ANY product name, category, type, or keyword.
+		   - Even simple product searches should be classified here.
 		   Example:
-		   - "Best wireless mouse under $50"
-		   - "Gaming keyboard with RGB"
-		   - "Headphones for gym"
-		   - "Ergonomic desk chair for back pain"
+		   - "basreng" (snack name)
+		   - "makanan ringan" (snacks)
+		   - "laptop gaming"
+		   - "cariin produk basreng"
+		   - "cari makanan"
+		   - "headphone murah"
+		   - "tas ransel"
 		
 		4. follow_up
 		   - The user message references a previous answer or continues the context.
 		   Example:
-		   - "yes wireless"
-		   - "cheaper one"
-		   - "any other option?"
-		   - "show me more models"
+		   - "yang lebih murah"
+		   - "ada warna lain?"
+		   - "show me more"
 		
 		---
+		
+		IMPORTANT: If the user mentions ANY product keyword in Indonesian or English, 
+		classify as "specific_product_search". Be generous with this classification.
 		
 		RESPONSE FORMAT (MUST BE JSON, NO EXTRA TEXT):
 		
@@ -143,7 +148,16 @@ func (c *MistralLLM) ClassifyIntent(ctx context.Context, userMessage string) (*C
 }
 
 func (c *MistralLLM) Chat(ctx context.Context, userMessage string) (string, error) {
+	systemPrompt := `Kamu adalah asisten belanja online yang ramah dan membantu.
+Kamu HARUS menjawab dalam Bahasa Indonesia.
+Bantu pengguna mencari produk yang mereka butuhkan.
+Jawab dengan singkat dan jelas.`
+
 	messages := []llms.MessageContent{
+		{
+			Role:  llms.ChatMessageTypeSystem,
+			Parts: []llms.ContentPart{llms.TextPart(systemPrompt)},
+		},
 		{
 			Role:  llms.ChatMessageTypeHuman,
 			Parts: []llms.ContentPart{llms.TextPart(userMessage)},

@@ -5,6 +5,7 @@ import (
 	"chat2pay/internal/pkg/llm/gemini"
 	"chat2pay/internal/pkg/llm/mistral"
 	"chat2pay/internal/pkg/llm/openai"
+	"chat2pay/internal/pkg/rajaongkir"
 	"github.com/sarulabs/di/v2"
 )
 
@@ -29,6 +30,13 @@ func LoadPackage() *[]di.Def {
 			Build: func(ctn di.Container) (interface{}, error) {
 				config := ctn.Get(ConfigDefName).(*yaml.Config)
 				return mistral.NewMistralLLM(config.Mistral.APIKey), nil
+			},
+		},
+		{
+			Name: RajaOngkirName,
+			Build: func(ctn di.Container) (interface{}, error) {
+				config := ctn.Get(ConfigDefName).(*yaml.Config)
+				return rajaongkir.NewRajaOngkir(config.RajaOngkir.APIKey), nil
 			},
 		},
 	}

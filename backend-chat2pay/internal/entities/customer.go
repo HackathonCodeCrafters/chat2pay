@@ -3,11 +3,11 @@ package entities
 import "time"
 
 type Customer struct {
-	ID           string    `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name         string    `gorm:"type:varchar(150);not null" json:"name"`
-	Email        *string   `gorm:"type:varchar(150);uniqueIndex:uq_customers_email" json:"email,omitempty"`
-	Phone        *string   `gorm:"type:varchar(50)" json:"phone,omitempty"`
-	PasswordHash *string   `gorm:"type:text" json:"password_hash,omitempty"`
-	CreatedAt    time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt    time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	ID           string    `db:"id" json:"id"`
+	Name         string    `db:"name" json:"name"`
+	Email        *string   `db:"email" json:"email,omitempty"`
+	Phone        *string   `db:"phone" json:"phone,omitempty"`
+	PasswordHash *string   `db:"password_hash" json:"-"`
+	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
 }

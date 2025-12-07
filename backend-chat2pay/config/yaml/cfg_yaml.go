@@ -6,15 +6,16 @@ import (
 )
 
 type Config struct {
-	App       App       `yaml:"app,omitempty" json:"app"`
-	DB        DB        `yaml:"db" json:"db"`
-	Websocket Websocket `yaml:"web_socket"  json:"web_socket"`
-	JWT       JWT       `yaml:"jwt" json:"jwt"`
-	Logger    Logger    `yaml:"logger" json:"logger"`
-	Kolosal   Kolosal   `yaml:"kolosal"json:"kolosal"`
-	Gemini    Gemini    `yaml:"gemini" json:"gemini"`
-	OpenAI    OpenAI    `yaml:"open_ai" json:"open_ai"`
-	Mistral   Mistral   `yaml:"mistral" json:"mistral"`
+	App        App        `yaml:"app,omitempty" json:"app"`
+	DB         DB         `yaml:"db" json:"db"`
+	Websocket  Websocket  `yaml:"web_socket"  json:"web_socket"`
+	JWT        JWT        `yaml:"jwt" json:"jwt"`
+	Logger     Logger     `yaml:"logger" json:"logger"`
+	Kolosal    Kolosal    `yaml:"kolosal"json:"kolosal"`
+	Gemini     Gemini     `yaml:"gemini" json:"gemini"`
+	OpenAI     OpenAI     `yaml:"open_ai" json:"open_ai"`
+	Mistral    Mistral    `yaml:"mistral" json:"mistral"`
+	RajaOngkir RajaOngkir `yaml:"rajaongkir" json:"rajaongkir"`
 }
 
 type App struct {
@@ -55,6 +56,10 @@ type Gemini struct {
 }
 
 type Mistral struct {
+	APIKey string `yaml:"api_key" json:"api_key"`
+}
+
+type RajaOngkir struct {
 	APIKey string `yaml:"api_key" json:"api_key"`
 }
 

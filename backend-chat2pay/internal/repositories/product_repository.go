@@ -13,6 +13,7 @@ import (
 type ProductRepository interface {
 	Create(ctx context.Context, product *entities.Product) (*entities.Product, error)
 	FindAll(ctx context.Context, merchantId string, limit, offset int) ([]entities.Product, error)
+	FindByID(ctx context.Context, id string) (*entities.Product, error)
 	FindByIDs(ctx context.Context, ids []string) ([]entities.Product, error)
 	FindOneById(ctx context.Context, id string) (*entities.Product, error)
 	FindByCategoryId(ctx context.Context, categoryId string, limit, offset int) ([]entities.Product, error)
@@ -39,8 +40,8 @@ func NewProductRepo(db *sqlx.DB) ProductRepository {
 func (r *productRepository) Create(ctx context.Context, product *entities.Product) (*entities.Product, error) {
 	query := `
 		INSERT INTO product (
-		    id, merchant_id, outlet_id, category_id, name, description, sku, price, stock, status
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		    id, merchant_id, outlet_id, category_id, name, description, sku, price, stock, status, image
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		RETURNING id, created_at, updated_at;
 	`
 
@@ -55,6 +56,7 @@ func (r *productRepository) Create(ctx context.Context, product *entities.Produc
 		product.Price,
 		product.Stock,
 		product.Status,
+		product.Image,
 	).Scan(&product.ID, &product.CreatedAt, &product.UpdatedAt)
 
 	return product, err
@@ -63,17 +65,32 @@ func (r *productRepository) Create(ctx context.Context, product *entities.Produc
 func (r *productRepository) FindAll(ctx context.Context, merchantId string, limit, offset int) ([]entities.Product, error) {
 	products := []entities.Product{}
 
-	query := `
-		SELECT 
-			id, merchant_id, outlet_id, category_id, name, description, sku,
-			price, stock, status, created_at, updated_at
-		FROM product 
-		WHERE ($1 = 0 OR merchant_id = $1)
-		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3;
-	`
+	var query string
+	var err error
 
-	err := r.DB.SelectContext(ctx, &products, query, merchantId, limit, offset)
+	if merchantId == "" {
+		query = `
+			SELECT 
+				id, merchant_id, outlet_id, category_id, name, description, sku,
+				price, stock, status, image, created_at, updated_at
+			FROM product 
+			ORDER BY created_at DESC
+			LIMIT $1 OFFSET $2;
+		`
+		err = r.DB.SelectContext(ctx, &products, query, limit, offset)
+	} else {
+		query = `
+			SELECT 
+				id, merchant_id, outlet_id, category_id, name, description, sku,
+				price, stock, status, image, created_at, updated_at
+			FROM product 
+			WHERE merchant_id = $1
+			ORDER BY created_at DESC
+			LIMIT $2 OFFSET $3;
+		`
+		err = r.DB.SelectContext(ctx, &products, query, merchantId, limit, offset)
+	}
+
 	return products, err
 }
 
@@ -83,7 +100,7 @@ func (r *productRepository) FindByIDs(ctx context.Context, ids []string) ([]enti
 	query := `
 		SELECT 
 			id, merchant_id, outlet_id, category_id, name, description, sku,
-			price, stock, status, created_at, updated_at
+			price, stock, status, image, created_at, updated_at
 		FROM product 
 		WHERE id = ANY($1)
 		ORDER BY created_at DESC;
@@ -106,6 +123,7 @@ func (r *productRepository) FindByIDs(ctx context.Context, ids []string) ([]enti
 			&p.Price,
 			&p.Stock,
 			&p.Status,
+			&p.Image,
 			&p.CreatedAt,
 			&p.UpdatedAt); err != nil {
 			return nil, err
@@ -122,7 +140,7 @@ func (r *productRepository) FindOneById(ctx context.Context, id string) (*entiti
 	query := `
 		SELECT 
 			id, merchant_id, outlet_id, category_id, name, description, sku,
-			price, stock, status, created_at, updated_at
+			price, stock, status, image, created_at, updated_at
 		FROM product WHERE id = $1 LIMIT 1;
 	`
 
@@ -137,6 +155,7 @@ func (r *productRepository) FindOneById(ctx context.Context, id string) (*entiti
 		&p.Price,
 		&p.Stock,
 		&p.Status,
+		&p.Image,
 		&p.CreatedAt,
 		&p.UpdatedAt,
 	)
@@ -151,13 +170,17 @@ func (r *productRepository) FindOneById(ctx context.Context, id string) (*entiti
 	return &p, nil
 }
 
+func (r *productRepository) FindByID(ctx context.Context, id string) (*entities.Product, error) {
+	return r.FindOneById(ctx, id)
+}
+
 func (r *productRepository) FindByCategoryId(ctx context.Context, categoryId string, limit, offset int) ([]entities.Product, error) {
 	products := []entities.Product{}
 
 	query := `
 		SELECT 
 			id, merchant_id, outlet_id, category_id, name, description, sku,
-			price, stock, status, created_at, updated_at
+			price, stock, status, image, created_at, updated_at
 		FROM product 
 		WHERE category_id = $1
 		ORDER BY created_at DESC
@@ -201,7 +224,7 @@ func (r *productRepository) Delete(ctx context.Context, id string) error {
 
 func (r *productRepository) UpdateStock(ctx context.Context, id string, quantity int) error {
 	_, err := r.DB.ExecContext(ctx,
-		`UPDATE product SET stock = stock + $1 WHERE id = $2`,
+		`UPDATE product SET stock = $1, updated_at = NOW() WHERE id = $2`,
 		quantity, id,
 	)
 	return err
@@ -209,13 +232,14 @@ func (r *productRepository) UpdateStock(ctx context.Context, id string, quantity
 
 func (r *productRepository) Count(ctx context.Context, merchantId string) (int64, error) {
 	var count int64
+	var err error
 
-	query := `
-		SELECT COUNT(*) FROM product
-		WHERE ($1 = 0 OR merchant_id = $1);
-	`
+	if merchantId == "" {
+		err = r.DB.GetContext(ctx, &count, `SELECT COUNT(*) FROM product`)
+	} else {
+		err = r.DB.GetContext(ctx, &count, `SELECT COUNT(*) FROM product WHERE merchant_id = $1`, merchantId)
+	}
 
-	err := r.DB.GetContext(ctx, &count, query, merchantId)
 	return count, err
 }
 
