@@ -80,6 +80,6 @@ func NewSocketEvent(router fiber.Router, ctn di.Container) {
 		ctx := context.WithValue(context.Background(), "session_id", userID)
 		llmPackage.NewConnection(ctx)
 
-		kws.Emit([]byte(fmt.Sprintf("👋 Welcome", userID)), socketio.TextMessage)
+		kws.Emit([]byte(fmt.Sprintf("👋 Welcome")), socketio.TextMessage)
 	}))
 }

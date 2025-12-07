@@ -47,6 +47,22 @@ func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
 }
 
+func (h *ProductHandler) CreateMultiple(c *fiber.Ctx) error {
+	var req []dto.ProductRequest
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(presenter.ErrorResponse(err))
+	}
+
+	response := h.productService.CreateMultiple(c.Context(), &req)
+
+	if response.Errors != nil {
+		return c.Status(response.Code).JSON(presenter.ErrorResponse(response.Errors))
+	}
+
+	return c.Status(response.Code).JSON(presenter.SuccessResponse(response.Data))
+}
+
 // GetAll godoc
 // @Summary Get All Products
 // @Description Mendapatkan daftar produk berdasarkan merchant
